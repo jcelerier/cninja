@@ -1,16 +1,19 @@
-cmake_minimum_required(VERSION 3.17)
-
+cmake_minimum_required(VERSION 3.10)
 project(cninja LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 add_executable(cninja)
+
+target_include_directories(cninja
+  PRIVATE
+    3rdparty/cxxopts/include
+)
+
 target_sources(cninja
   PRIVATE
     src/main.cpp
 )
-target_include_directories(cninja
+
+target_compile_options(cninja
   PRIVATE
-    3rdparty/cxxopts/include
+    $<IF:$<BOOL:${WIN32}>,/std:c++latest,-std=c++1z>
 )
