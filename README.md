@@ -70,9 +70,9 @@ in my home directory reveals almost 30 distinct variables used in various CMake 
 
   🡆 Yes (also, clean them !)
 
-- My projects have bash / powershell / python / perl / .travis.yml scripts which invoke CMake with sanitizers, LTO and build warnings
+- My projects have bash / powershell / python / perl / makefile / .travis.yml scripts which invoke CMake
 
-  🡆 :-)
+  🡆 Yes
   
 - `history | grep cmake | grep CMAKE_` in my shell fills my terminal screen
 
