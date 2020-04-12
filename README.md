@@ -26,6 +26,14 @@ A project trying to set 22th century defaults to CMake calls, with a simplified 
     # Produces a build in "build-asan-ubsan-debugsyms-examples-tests"
     $ cninja asan ubsan debugsyms tests examples
 
+As an example, here is a comparison of the default set-up of `cninja` and the same build type for CMake on the [Strawberry](https://github.com/strawberrymusicplayer/strawberry) software : 
+
+| Tool   | Command                                                                 | First build | After changing a file |
+|--------|-------------------------------------------------------------------------|-------------|-----------------------|
+| cmake  | mkdir build<br> cd build<br> cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..<br>cmake --build . -- -j16   | 2m 40s      | 7.6s                  |
+| cninja | cninja                                                                  |  2m 16s     | 1.7s                  |
+
+
 ## Goals
 
 The main goal is to uniformize semantics across platforms, with the strictest choice prevailing, to make portability easier and not have bad surprises when porting software written on Linux to macOS or Windows.
