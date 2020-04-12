@@ -11,23 +11,32 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MinGW", artifact: "Windows.tar.xz",
+            name: "Windows",
+            artifact: "Windows.tar.xz",
             os: windows-latest,
-            build_type: "Release", cc: "clang", cxx: "clang++"
+            build_type: "Release",
+            cxx: "clang++"
           }
         - {
-            name: "Ubuntu", artifact: "Linux.tar.xz",
+            name: "Ubuntu",
+            artifact: "Linux.tar.xz",
             os: ubuntu-latest,
-            build_type: "Release", cc: "clang", cxx: "clang++"
+            build_type: "Release",
+            cxx: "clang++-9",
+            cxxflags: "-stdlib=libc++"
           }
         - {
-            name: "macOS", artifact: "macOS.tar.xz",
+            name: "macOS",
+            artifact: "macOS.tar.xz",
             os: macos-latest,
-            build_type: "Release", cc: "clang", cxx: "clang++"
+            build_type: "Release"
           }
     steps:
     - uses: actions/checkout@v2
     - name: configure
+      env:
+        CXXFLAGS: ${{ matrix.cxxflags }}
+        CXX: ${{ matrix.cxx }}
       run: cmake .
     - name: make
       run: cmake --build .

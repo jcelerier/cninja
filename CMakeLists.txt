@@ -17,3 +17,10 @@ target_compile_options(cninja
   PRIVATE
     $<IF:$<BOOL:${WIN32}>,/std:c++latest,-std=c++1z>
 )
+
+install(
+  TARGETS
+    cninja
+  RUNTIME DESTINATION
+    bin
+)
