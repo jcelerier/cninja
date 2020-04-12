@@ -12,14 +12,15 @@ jobs:
         config:
         - {
             name: "Windows",
-            artifact: "Windows.tar.xz",
+            artifact: "cninja-1.0.0-Windows.zip",
             os: windows-latest,
             build_type: "Release",
-            cxx: "clang++"
+            cxx: "../llvm-mingw/bin/clang++.exe",
+            cxxflags: ""
           }
         - {
             name: "Ubuntu",
-            artifact: "Linux.tar.xz",
+            artifact: "cninja-1.0.0-Linux.zip",
             os: ubuntu-latest,
             build_type: "Release",
             cxx: "clang++-9",
@@ -27,22 +28,41 @@ jobs:
           }
         - {
             name: "macOS",
-            artifact: "macOS.tar.xz",
+            artifact: "cninja-1.0.0-Darwin.zip",
             os: macos-latest,
-            build_type: "Release"
+            build_type: "Release",
+            cxx: "clang++",
+            cxxflags: ""
           }
     steps:
     - uses: actions/checkout@v2
+    - name: deps
+      run:  |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt update
+          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          cmake -P 'cmake/download-llvm.cmake'
+          cmake -E tar x llvm.zip
+          echo "::add-path::$PWD/llvm-mingw/bin"
+        fi
+      shell: bash
+
     - name: configure
       env:
-        CXXFLAGS: ${{ matrix.cxxflags }}
-        CXX: ${{ matrix.cxx }}
-      run: mkdir build && cd build && cmake ..
+        CXXFLAGS: ${{ matrix.config.cxxflags }}
+        CXX: ${{ matrix.config.cxx }}
+      run: |
+        env
+        mkdir build && cd build && cmake ..
+
     - name: make
-      run: cmake --build .
+      run: cd build && cmake --build .
+
     - name: test
       env:
         CTEST_PARALLEL_LEVEL: 8
-      run: ctest
+      run: cd build && ctest -V
+
     - name: deploy
-      run: cmake --build . --target package
+      run: cd build && cpack -G ZIP

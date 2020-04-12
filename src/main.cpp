@@ -2,8 +2,30 @@
 #include <filesystem>
 #include <cxxopts.hpp>
 
+namespace fs = std::filesystem;
 namespace
 {
+constexpr const struct System
+{
+  static constexpr bool os_apple{
+#if defined(__APPLE__)
+    true
+#endif
+  };
+
+  static constexpr bool os_linux{
+#if defined(__linux__)
+    true
+#endif
+  };
+
+  static  constexpr bool os_windows{
+#if defined(_WIN32)
+    true
+#endif
+  };
+} sys;
+
 constexpr bool is_libcxx_default() noexcept
 {
   // We'll assume that libc++ is the default for clang
@@ -32,55 +54,54 @@ bool check_command(const char* command)
   return res == 0;
 }
 
-bool check_environment()
+bool check_environment() noexcept
 {
-  if(!check_command("clang -v")) {
-    std::cout << "clang not found. Please install clang.\n";
+  if(!check_command("cmake --version"))
+  {
+    std::cout << "cmake not found. Please install cmake: \n"
+                 "https://cmake.org/download\n";
     return false;
   }
-  if(!check_command("cmake --version")) {
-    std::cout << "cmake not found. Please install cmake.\n";
+
+  if(!check_command("ninja --version"))
+  {
+    std::cout << "ninja not found. Please install ninja: \n"
+                 "https://github.com/ninja-build/ninja/releases\n";
     return false;
   }
-  if(!check_command("ninja --version")) {
-    std::cout << "ninja not found. Please install ninja.\n";
-    return false;
-  }
+
 #if (_WIN32)
-  if(!check_command("echo 'int main(){}' | clang -x c++ - -o nul")) {
-    std::cout << "lld not found. Please install lld.\n";
-    return false;
-  }
+  if(!check_command("echo 'int main(){}' | clang -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"))
+#elif (__APPLE__)
+  if(!check_command("echo 'int main(){}' | clang -x c++ - -o /dev/null"))
 #else
-  if(!check_command("echo 'int main(){}' | clang -x c++ - -o /dev/null")) {
-    std::cout << "lld not found. Please install lld.\n";
+  if(!check_command("echo 'int main(){}' | clang -x c++ -stdlib=libc++ -fuse-ld=lld - -o /dev/null"))
+#endif
+  {
+    if constexpr(sys.os_linux)
+    {
+      std::cout << "clang not found. Please install clang 9 or later: \n";
+      if(fs::exists("/usr/bin/apt"))
+        std::cout << "sudo apt update ; sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 \n";
+      else if(fs::exists("/usr/bin/pacman"))
+        std::cout << "sudo apt update ; sudo apt install clang libc++ lld \n";
+      else if(fs::exists("/usr/bin/yum"))
+        std::cout << "sudo yum update ; sudo yum install clang libcxx-devel libcxxabi-devel lld \n";
+    }
+    else if constexpr(sys.os_apple)
+    {
+      std::cout << "clang not found. Please install either Xcode through the appstore or the command line tools.\n";
+    }
+    else if constexpr(sys.os_windows)
+    {
+      std::cout << "clang not found. Please install clang and put it in your path: \n";
+                   "https://github.com/mstorsjo/llvm-mingw/releases\n";
+    }
     return false;
   }
-#endif
 
   return true;
 }
-
-constexpr const struct System
-{
-  static constexpr bool os_apple{
-#if defined(__APPLE__)
-    true
-#endif
-  };
-
-  static constexpr bool os_linux{
-#if defined(__linux__)
-    true
-#endif
-  };
-
-  static  constexpr bool os_windows{
-#if defined(_WIN32)
-    true
-#endif
-  };
-} sys;
 
 struct Options
 {
@@ -421,6 +442,16 @@ std::string generate_cmake_call(Options options)
     }
   }
 
+  std::string clang_suffix;
+  if(fs::exists("clang++-11"))
+    clang_suffix = "-11";
+  else if(fs::exists("clang++-10"))
+    clang_suffix = "-10";
+  else if(fs::exists("clang++-9"))
+    clang_suffix = "-9";
+  else if(fs::exists("clang++-8"))
+    clang_suffix = "-8";
+
   std::string cmd;
   cmd += "cmake"
          " -Wno-dev \\\n"
@@ -430,8 +461,8 @@ std::string generate_cmake_call(Options options)
 
          " -G\"Ninja\" \\\n"
 
-         " -DCMAKE_C_COMPILER=clang \\\n"
-         " -DCMAKE_CXX_COMPILER=clang++ \\\n"
+         " -DCMAKE_C_COMPILER=clang" + clang_suffix + " \\\n"
+         " -DCMAKE_CXX_COMPILER=clang++" + clang_suffix + " \\\n"
 
          " -DCMAKE_C_FLAGS=\"" + cflags + "\" \\\n"
          " -DCMAKE_CXX_FLAGS=\"" + cflags + "\" \\\n"
@@ -507,7 +538,6 @@ int main(int argc, char** argv) try
   const auto build_path = generate_build_path(options);
 
   // Create or go to build folder
-  namespace fs = std::filesystem;
   {
     fs::create_directory(build_path);
 
