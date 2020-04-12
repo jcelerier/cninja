@@ -1,7 +1,7 @@
 # cninja - an opinionated frontend to cmake
 ![Build status](https://github.com/jcelerier/cninja/workflows/Build/badge.svg)
 
-A project trying to set 22th century defaults to CMake calls, with a simplified syntax for the most common needs during development.
+A project trying to set 22th century defaults to CMake calls, with a simplified syntax for the most common needs during development and an emphasis on build speed.
 
 ## Features
 
