@@ -9,7 +9,7 @@ A project trying to set 22th century defaults to CMake calls, with a simplified 
 - Forces you to use a recent clang with a recent C++ standard.
 - Configures and builds in one glorious stroke.
 - Does not scream at you.
-- Does not try to install in global system folders - the `install` target will copy things in an `build/install` folder.
+- Does not try to install in global system folders - the `install` target will copy things in a `build/install` folder.
 
 ## Usage
 
