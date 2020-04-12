@@ -1,6 +1,13 @@
-#include <iostream>
 #include <filesystem>
 #include <cxxopts.hpp>
+
+#define FMT_STATIC_THOUSANDS_SEPARATOR 0
+#define FMT_USE_FLOAT 0
+#define FMT_USE_DOUBLE 0
+#define FMT_USE_LONG_DOUBLE 0
+#define FMT_HEADER_ONLY
+
+#include <fmt/printf.h>
 
 namespace fs = std::filesystem;
 namespace
@@ -98,9 +105,9 @@ std::string uppercase(std::string s) noexcept
 
 bool check_command(const std::string& command)
 {
-  std::cout << "Checking: " << command << "\n";
+  fmt::print("Checking: {}\n", command);
   int res = system(command.c_str());
-  std::cout << "\n";
+  fmt::print("\n", command);
   return res == 0;
 }
 
@@ -108,15 +115,15 @@ bool check_environment() noexcept
 {
   if(!check_command("cmake --version"))
   {
-    std::cout << "cmake not found. Please install cmake: \n"
-                 "https://cmake.org/download\n";
+    fmt::print("cmake not found. Please install cmake: \n"
+                 "https://cmake.org/download\n");
     return false;
   }
 
   if(!check_command("ninja --version"))
   {
-    std::cout << "ninja not found. Please install ninja: \n"
-                 "https://github.com/ninja-build/ninja/releases\n";
+    fmt::print("ninja not found. Please install ninja: \n"
+                "https://github.com/ninja-build/ninja/releases\n");
     return false;
   }
 
@@ -134,23 +141,29 @@ bool check_environment() noexcept
   {
     if constexpr(sys.os_linux)
     {
-      std::cout << "clang not found. Please install clang 9 or later: \n";
+      fmt::print("clang not found. Please install clang 9 or later: \n");
       if(fs::exists("/usr/bin/apt"))
-        std::cout << "sudo apt update ; sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 \n";
+        fmt::print("sudo apt update ; sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 \n");
       else if(fs::exists("/usr/bin/pacman"))
-        std::cout << "sudo apt update ; sudo apt install clang libc++ lld \n";
+        fmt::print("sudo apt update ; sudo apt install clang libc++ lld \n");
       else if(fs::exists("/usr/bin/yum"))
-        std::cout << "sudo yum update ; sudo yum install clang libcxx-devel libcxxabi-devel lld \n";
+        fmt::print("sudo yum update ; sudo yum install clang libcxx-devel libcxxabi-devel lld \n");
     }
     else if constexpr(sys.os_apple)
     {
-      std::cout << "clang not found. Please install either Xcode through the appstore or the command line tools.\n";
+      fmt::print("clang not found. Please install either Xcode through the appstore or the command line tools.\n");
     }
     else if constexpr(sys.os_windows)
     {
-      std::cout << "clang not found. Please install clang and put it in your path: \n";
-                   "https://github.com/mstorsjo/llvm-mingw/releases\n";
+      fmt::print("clang not found. Please install clang and put it in your path: \n"
+                  "https://github.com/mstorsjo/llvm-mingw/releases\n");
     }
+    return false;
+  }
+
+  if(!fs::exists("CMakeLists.txt") && !fs::exists("build.ninja"))
+  {
+    fmt::print("CMakeLists.txt not found. Run cninja from a CMake source or binary dir.\n");
     return false;
   }
 
@@ -228,7 +241,7 @@ Options parse_options(int argc, char** argv)
   const auto result = args.parse(argc, argv);
 
   if (result.count("help")) {
-    std::cout << args.help() << std::endl;
+    fmt::print("{}\n", args.help());
     std::exit(0);
   }
 
@@ -511,7 +524,7 @@ std::string generate_cmake_call(Options options)
 
          " -DCMAKE_C_FLAGS=\"" + cflags + "\" \\\n"
          " -DCMAKE_CXX_FLAGS=\"" + cflags + "\" \\\n"
-         " -DCMAKE_EXE_LINKER_FLAGS=\"" + lflags + "\" \\\n"
+         " -DCMAKE_EXE_LINKER_FLAGS=\"" + lflags + exe_lflags + "\" \\\n"
          " -DCMAKE_SHARED_LINKER_FLAGS=\"" + lflags + "\" \\\n"
 
          " -DCMAKE_INSTALL_PREFIX=install \\\n"
@@ -579,27 +592,31 @@ int main(int argc, char** argv) try
   if(!check_environment())
     return 1;
 
-  const auto cmd = generate_cmake_call(options);
-  const auto build_path = generate_build_path(options);
-
-  // Create or go to build folder
+  // If we are in a build dir we just run a build
+  if(!fs::exists("build.ninja"))
   {
-    fs::create_directory(build_path);
+    const auto cmd = generate_cmake_call(options);
+    const auto build_path = generate_build_path(options);
 
-    std::error_code ec;
-    fs::current_path(build_path, ec);
-    if(ec) {
-      std::cout << "Could not cd into " << build_path << " ; aborting.";
-      return 1;
+    // Create or go to build folder
+    {
+      fs::create_directory(build_path);
+
+      std::error_code ec;
+      fs::current_path(build_path, ec);
+      if(ec) {
+        fmt::print("Could not cd into {} ; aborting.\n", build_path);
+        return 1;
+      }
     }
-  }
 
-  // Run cmake if necessary
-  if (!fs::exists("build.ninja"))
-  {
-    std::cout << "Configuring: \n$ " << cmd << std::endl;
-    if(int ret = system(cmd.c_str()); ret != 0) {
-      return ret;
+    // Run cmake if necessary
+    if (!fs::exists("build.ninja"))
+    {
+      fmt::print("Configuring: \n$ {}\n", cmd);
+      if(int ret = system(cmd.c_str()); ret != 0) {
+        return ret;
+      }
     }
   }
 
@@ -608,6 +625,6 @@ int main(int argc, char** argv) try
 }
 catch (const std::exception& e)
 {
-  std::cerr << e.what() << "\nRun \"cninja help\" for help." << std::endl;
+  fmt::print("Error: {}\nRun \"cninja help\" for help.", e.what());
   return 1;
 }

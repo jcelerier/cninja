@@ -49,5 +49,5 @@ CTestTestfile.cmake
 _deps
 
 
-build
+build*
 

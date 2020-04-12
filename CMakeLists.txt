@@ -8,6 +8,7 @@ add_executable(cninja)
 target_include_directories(cninja
   PRIVATE
     3rdparty/cxxopts/include
+    3rdparty/fmt/include
 )
 
 target_sources(cninja
