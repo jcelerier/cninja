@@ -62,7 +62,7 @@ in my home directory reveals almost 30 distinct variables used in various CMake 
 
   🡆 Yes (also, clean them !)
 
-- `history | grep cmake | grep CMAKE_` in my shell has a non-empty output
+- `history | grep cmake | grep CMAKE_` in my shell fills my terminal screen
 
   🡆 Yes
 
