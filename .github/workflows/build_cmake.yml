@@ -40,11 +40,14 @@ jobs:
       run:  |
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt update
-          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9
+          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 ninja-build
         elif [ "$RUNNER_OS" == "Windows" ]; then
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
           echo "::add-path::$PWD/llvm-mingw/bin"
+          choco install ninja
+        else
+          brew install ninja
         fi
       shell: bash
 
@@ -54,7 +57,7 @@ jobs:
         CXX: ${{ matrix.config.cxx }}
       run: |
         env
-        mkdir build && cd build && cmake -GNinja ..
+        mkdir build && cd build && cmake ..
 
     - name: make
       run: cd build && cmake --build .
