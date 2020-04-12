@@ -37,6 +37,12 @@ jobs:
       env:
         CXXFLAGS: ${{ matrix.cxxflags }}
         CXX: ${{ matrix.cxx }}
-      run: cmake .
+      run: mkdir build && cd build && cmake ..
     - name: make
       run: cmake --build .
+    - name: test
+      env:
+        CTEST_PARALLEL_LEVEL: 8
+      run: ctest
+    - name: deploy
+      run: cmake --build . --target package

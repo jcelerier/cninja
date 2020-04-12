@@ -1,14 +1,6 @@
 #include <iostream>
 #include <filesystem>
-#include <cstdio>
 #include <cxxopts.hpp>
-
-// For dup
-#if defined(_WIN32)
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 namespace
 {
@@ -34,6 +26,7 @@ std::string uppercase(std::string s) noexcept
 
 bool check_command(const char* command)
 {
+  std::cout << "Checking: " << command << "\n";
   int res = system(command);
   std::cout << "\n";
   return res == 0;
@@ -174,6 +167,7 @@ std::string generate_cmake_call(Options options)
   std::string cmakeflags;
   std::string cflags;
   std::string lflags;
+  std::string exe_lflags;
 
   // Common options
   cflags +=
@@ -226,6 +220,8 @@ std::string generate_cmake_call(Options options)
     else
     {
       config = "Release";
+
+      // No debug info, strip symbols when linking
       lflags += " -g0 -s -Wl,-s ";
     }
 
@@ -245,6 +241,7 @@ std::string generate_cmake_call(Options options)
     }
     else
     {
+      // No debug info, strip symbols when linking
       lflags += " -g0 -s -Wl,-s ";
     }
   }
@@ -293,14 +290,13 @@ std::string generate_cmake_call(Options options)
     // Maximal optimization. Also needed for some optimizations to work.
     cflags += " -flto=full -fwhole-program-vtables ";
     lflags += " -flto=full -fwhole-program-vtables ";
-    // Will only be available in clang-11
-    // -fvirtual-function-elimination
+    // Will only be available in clang-11:
     // -fvirtual-function-elimination
   }
   else if(options.thin_lto)
   {
     // https://clang.llvm.org/docs/ThinLTO.html
-    // Builds faster but a tiny bit less performant
+    // Builds faster than -flto=full but enables less optimizations
     cflags += " -flto=thin ";
     lflags += " -flto=thin ";
   }
@@ -317,6 +313,7 @@ std::string generate_cmake_call(Options options)
       cflags += "-D_GLIBCXX_SANITIZE_VECTOR";
     }
   }
+
   if(options.ubsan)
   {
     cflags += " -fsanitize=undefined -fsanitize=integer ";
@@ -329,9 +326,10 @@ std::string generate_cmake_call(Options options)
     lflags += " -fsanitize=thread ";
   }
 
+  // Produce fully static executables
   if(options.staticbuild)
   {
-    lflags += " -static-libgcc -static-libstdc++ -static ";
+    exe_lflags += " -static-libgcc -static-libstdc++ -static ";
   }
 
   if(options.warnings)
@@ -387,6 +385,7 @@ std::string generate_cmake_call(Options options)
   }
   else
   {
+    // Disable macro names commonly used
     cmakeflags +=
         " -DBUILD_EXAMPLE=OFF"
         " -DBUILD_EXAMPLES=OFF"
@@ -394,12 +393,14 @@ std::string generate_cmake_call(Options options)
   }
   if(options.tests)
   {
+    // Official CMake variable name for tests
     cmakeflags +=
-        " -DBUILD_TESTS=ON"
+        " -DBUILD_TESTING=ON"
     ;
   }
   else
   {
+    // Disable macro names commonly used
     cmakeflags +=
         " -DWITH_TESTS=OFF"
         " -DBUILD_TEST=OFF"
@@ -422,10 +423,13 @@ std::string generate_cmake_call(Options options)
 
   std::string cmd;
   cmd += "cmake"
-         " .."
-         " -G\"Ninja\" \\\n"
          " -Wno-dev \\\n"
          " --no-warn-unused-cli \\\n"
+
+         " .."
+
+         " -G\"Ninja\" \\\n"
+
          " -DCMAKE_C_COMPILER=clang \\\n"
          " -DCMAKE_CXX_COMPILER=clang++ \\\n"
 
@@ -436,17 +440,28 @@ std::string generate_cmake_call(Options options)
 
          " -DCMAKE_INSTALL_PREFIX=install \\\n"
 
+         // Some libraries expect -fPIC
          " -DCMAKE_POSITION_INDEPENDENT_CODE=1 \\\n"
+
+         // Useful for running various tools, integrations in IDEs...
          " -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \\\n"
+
+         // We are in 2020
          " -DCMAKE_CXX_STANDARD=20 \\\n"
+
+         // If you CI run looks like
+         // $ cmake --build .
+         // $ cmake --build . --target install
+         // this will make it faster:
          " -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=1 \\\n"
 
+         // Hide all symbols by default.
+         // Use GenerateExportHeader !
          " -DCMAKE_C_VISIBILITY_PRESET=hidden \\\n"
          " -DCMAKE_CXX_VISIBILITY_PRESET=hidden \\\n"
          " -DCMAKE_VISIBILITY_INLINES_HIDDEN=1 \\\n"
-         " -DCTEST_OUTPUT_ON_FAILURE=1 \\\n"
 
-         + cmakeflags;
+         + cmakeflags
   ;
   return cmd;
 }
@@ -513,11 +528,7 @@ int main(int argc, char** argv) try
     }
   }
 
-  if (!fs::exists("build.ninja"))
-  {
-    return 1;
-  }
-
+  // Run the build
   return system("cmake --build .");
 }
 catch (const std::exception& e)

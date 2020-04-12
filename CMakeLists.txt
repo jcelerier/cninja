@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
-project(cninja LANGUAGES CXX)
+project(cninja LANGUAGES CXX VERSION 1.0.0)
 enable_testing()
 
+# Create target
 add_executable(cninja)
 
 target_include_directories(cninja
@@ -19,13 +20,15 @@ target_compile_options(cninja
     $<IF:$<BOOL:${WIN32}>,/std:c++latest,-std=c++1z>
 )
 
+# Install target
 install(
   TARGETS
     cninja
   RUNTIME DESTINATION
-    bin
+    .
 )
 
+# Tests
 file(COPY tests DESTINATION .)
 
 set(FLAGS fast small full-lto thin-lto asan ubsan tsan debugmode debugsyms warnings gcc libcxx static examples tests)
@@ -54,3 +57,7 @@ foreach(kind static shared executable)
     endforeach()
   endforeach()
 endforeach()
+
+# Packaging
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+include(CPack)
