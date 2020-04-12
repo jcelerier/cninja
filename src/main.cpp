@@ -25,30 +25,51 @@ static const struct System
 #endif
   };
 
+  // Returns true if the file passed in argument exists
+  // somewhere in the path
+  static bool is_in_path(std::string exe) noexcept
+  {
+    std::stringstream ss(getenv("PATH"));
+    std::string folder;
+    if constexpr(os_windows)
+    {
+      while(std::getline(ss, folder, ';'))
+        if(fs::exists(folder + "\\" + exe))
+          return true;
+    }
+    else
+    {
+      while(std::getline(ss, folder, ':'))
+        if(fs::exists(folder + "/" + exe))
+          return true;
+    }
+    return false;
+  }
+
   const std::string clang_binary = [] () {
-    if(fs::exists("clang-11"))
+    if(is_in_path("clang-11"))
       return "clang-11";
-    else if(fs::exists("clang-10"))
+    else if(is_in_path("clang-10"))
       return "clang-10";
-    else if(fs::exists("clang-9"))
+    else if(is_in_path("clang-9"))
       return "clang-9";
-    else if(fs::exists("clang-8"))
+    else if(is_in_path("clang-8"))
       return "clang-9";
-    else if(fs::exists("clang"))
+    else if(is_in_path("clang"))
       return "clang";
     else
       return "";
   }();
   const std::string clangpp_binary = [] () {
-    if(fs::exists("clang++-11"))
+    if(is_in_path("clang++-11"))
       return "clang++-11";
-    else if(fs::exists("clang++-10"))
+    else if(is_in_path("clang++-10"))
       return "clang++-10";
-    else if(fs::exists("clang++-9"))
+    else if(is_in_path("clang++-9"))
       return "clang++-9";
-    else if(fs::exists("clang++-8"))
+    else if(is_in_path("clang++-8"))
       return "clang++-9";
-    else if(fs::exists("clang++"))
+    else if(is_in_path("clang++"))
       return "clang++";
     else
       return "";
