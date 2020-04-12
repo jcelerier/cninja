@@ -37,7 +37,7 @@ For instance :
 
 It also splits the common "Debug" feature in its two orthogonal child features :
  * `debugsyms` will generate binaries with debug symbols.
- * `debugmode` will enable run-time checks and assertions in the standard library - the default for Debug in Windows, but not in Linux and Mac platforms too).
+ * `debugmode` will enable run-time checks and assertions in the standard library - the default for Debug in Windows, but generally not in Linux and Mac platforms.
 
 A further goal is to remove the need for adding various flags in each CMake file - ideally, CMake build scripts should just create targets and link libraries, not set up compiler flags. 
 Running for instance 
