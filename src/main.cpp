@@ -1,4 +1,4 @@
-#include <filesystem>
+#include <ghc/filesystem.hpp>
 #include <cxxopts.hpp>
 
 #define FMT_STATIC_THOUSANDS_SEPARATOR 0
@@ -9,7 +9,7 @@
 
 #include <fmt/printf.h>
 
-namespace fs = std::filesystem;
+namespace fs = ghc::filesystem;
 namespace
 {
 static const struct System
