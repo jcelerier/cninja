@@ -334,16 +334,17 @@ std::string generate_cmake_call(Options options)
   }
   else if(options.debugsyms)
   {
-    config = "Debug";
+    config = "RelWithDebInfo";
   }
   else
   {
-    config = "RelWithDebInfo";
+    config = "Release";
   }
 
   // Checks iterators and invariants in the stdlib and common libraries
   if(options.debugmode)
   {
+    config = "Debug";
     if(options.libcxx)
     {
       // See https://libcxx.llvm.org/docs/DesignDocs/DebugMode.html
