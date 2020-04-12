@@ -30,7 +30,7 @@ As an example, here is a comparison of the default set-up of `cninja` and the sa
 
 | Tool   | Command                                                                 | First build | After changing a file |
 |--------|-------------------------------------------------------------------------|-------------|-----------------------|
-| cmake  | cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..<br>cmake --build . -- -j16   | 2m 40s      | 7.6s                  |
+| cmake  | mkdir build<br> cd build<br> cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..<br>cmake --build . -- -j16   | 2m 40s      | 7.6s                  |
 | cninja | cninja                                                                  |  1m 53s     | 1.3s                  |
 
 ## Goals
