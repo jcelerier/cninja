@@ -504,6 +504,8 @@ std::string generate_cmake_call(Options options)
 
          " -G\"Ninja\" \\\n"
 
+         " -DCMAKE_BUILD_TYPE=" + config + " \\\n"
+
          " -DCMAKE_C_COMPILER=" + sys.clang_binary + " \\\n"
          " -DCMAKE_CXX_COMPILER=" + sys.clangpp_binary + " \\\n"
 
