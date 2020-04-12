@@ -1,3 +1,8 @@
+#if defined(_WIN32)
+#define WIN32_MEAN_AND_LEAN 1
+#define NOMINMAX 1
+#endif
+
 #include <ghc/filesystem.hpp>
 #include <cxxopts.hpp>
 
