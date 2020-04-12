@@ -1,6 +1,15 @@
 #include <iostream>
 #include <filesystem>
+#include <cstdio>
 #include <cxxopts.hpp>
+
+// For dup
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 namespace
 {
 constexpr bool is_libcxx_default() noexcept
@@ -12,6 +21,7 @@ constexpr bool is_libcxx_default() noexcept
 #endif
   return false;
 }
+
 std::string uppercase(std::string s) noexcept
 {
   std::transform(
@@ -21,6 +31,41 @@ std::string uppercase(std::string s) noexcept
   );
   return s;
 }
+
+bool check_command(const char* command)
+{
+  int res = system(command);
+  std::cout << "\n";
+  return res == 0;
+}
+
+bool check_environment()
+{
+  if(!check_command("clang -v")) {
+    std::cout << "clang not found. Please install clang.\n";
+    return false;
+  }
+  if(!check_command("cmake --version")) {
+    std::cout << "cmake not found. Please install cmake.\n";
+    return false;
+  }
+  if(!check_command("ninja --version")) {
+    std::cout << "ninja not found. Please install ninja.\n";
+    return false;
+  }
+#if (_WIN32)
+  if(!check_command("echo 'int main(){}' | clang -x c++ - -o nul")) {
+    std::cout << "lld not found. Please install lld.\n";
+    return false;
+  }
+#else
+  if(!check_command("echo 'int main(){}' | clang -x c++ - -o /dev/null")) {
+    std::cout << "lld not found. Please install lld.\n";
+    return false;
+  }
+#endif
+
+  return true;
 }
 
 constexpr const struct System
@@ -73,7 +118,7 @@ struct Options
   std::string target_era{};
 };
 
-int main(int argc, char** argv) try
+Options parse_options(int argc, char** argv)
 {
   Options options{};
 
@@ -87,7 +132,6 @@ int main(int argc, char** argv) try
       ("small", "Creates a small build", cxxopts::value<bool>(options.small))
 
       ("full-lto", "Full LTO", cxxopts::value<bool>(options.full_lto))
-      ("lto", "Thin LTO", cxxopts::value<bool>(options.thin_lto))
       ("thin-lto", "Thin LTO", cxxopts::value<bool>(options.thin_lto))
 
       ("asan", "AddressSanitizer", cxxopts::value<bool>(options.asan))
@@ -109,7 +153,7 @@ int main(int argc, char** argv) try
       ("examples", "Build examples", cxxopts::value<bool>(options.examples))
       ("tests", "Build tests", cxxopts::value<bool>(options.tests))
 
-      ("era", "Oldest compatible system. Example: winxp/win7/win10 (on windows), 10.14 (on macOS)", cxxopts::value<std::string>(options.target_era))
+      ("era", "Oldest compatible system. Example: era=winxp/win7/win10 (on windows), era=10.14 (on macOS)", cxxopts::value<std::string>(options.target_era))
 
       ("help", "Print help")
   ;
@@ -118,13 +162,14 @@ int main(int argc, char** argv) try
 
   if (result.count("help")) {
     std::cout << args.help() << std::endl;
-    return 0;
+    std::exit(0);
   }
 
-  namespace fs = std::filesystem;
-  fs::create_directory("build");
-  fs::current_path("build");
+  return options;
+}
 
+std::string generate_cmake_call(Options options)
+{
   std::string config;
   std::string cmakeflags;
   std::string cflags;
@@ -181,7 +226,6 @@ int main(int argc, char** argv) try
     else
     {
       config = "Release";
-      cflags += " -s ";
       lflags += " -g0 -s -Wl,-s ";
     }
 
@@ -201,7 +245,6 @@ int main(int argc, char** argv) try
     }
     else
     {
-      cflags += " -s ";
       lflags += " -g0 -s -Wl,-s ";
     }
   }
@@ -247,10 +290,12 @@ int main(int argc, char** argv) try
 
   if(options.full_lto)
   {
-    // Maximal optimization. Also needed for some optimizations to work,
-    // e.g. -fvirtual-function-elimination
-    cflags += " -flto=full -fvirtual-function-elimination ";
-    lflags += " -flto=full -fvirtual-function-elimination ";
+    // Maximal optimization. Also needed for some optimizations to work.
+    cflags += " -flto=full -fwhole-program-vtables ";
+    lflags += " -flto=full -fwhole-program-vtables ";
+    // Will only be available in clang-11
+    // -fvirtual-function-elimination
+    // -fvirtual-function-elimination
   }
   else if(options.thin_lto)
   {
@@ -311,6 +356,8 @@ int main(int argc, char** argv) try
       " -Wno-unused-local-typedef "
     ;
 
+    // Check that all the functions we are calling do indeed exist
+    // to prevent runtime crashes
     if constexpr(sys.os_apple)
     {
       lflags +=
@@ -377,6 +424,8 @@ int main(int argc, char** argv) try
   cmd += "cmake"
          " .."
          " -G\"Ninja\" \\\n"
+         " -Wno-dev \\\n"
+         " --no-warn-unused-cli \\\n"
          " -DCMAKE_C_COMPILER=clang \\\n"
          " -DCMAKE_CXX_COMPILER=clang++ \\\n"
 
@@ -395,19 +444,84 @@ int main(int argc, char** argv) try
          " -DCMAKE_C_VISIBILITY_PRESET=hidden \\\n"
          " -DCMAKE_CXX_VISIBILITY_PRESET=hidden \\\n"
          " -DCMAKE_VISIBILITY_INLINES_HIDDEN=1 \\\n"
+         " -DCTEST_OUTPUT_ON_FAILURE=1 \\\n"
 
          + cmakeflags;
   ;
-
-  std::cout << "Configuring: \n$ " << cmd << std::endl;
-  system(cmd.c_str());
-
-  std::cout << "Building: \n$ cmake --build ." << std::endl;
-  system("cmake --build .");
+  return cmd;
 }
-catch (const cxxopts::OptionException& e)
+
+std::string generate_build_path(Options options)
+{
+  std::string p = "build-";
+  if(options.fast) p += "fast-";
+  if(options.small) p += "small-";
+  if(options.full_lto) p += "full-lto-";
+  if(options.thin_lto) p += "thin-lto-";
+  if(options.asan) p += "asan-";
+  if(options.ubsan) p += "ubsan-";
+  if(options.tsan) p += "tsan-";
+  if(options.staticbuild) p += "static-";
+  if(options.profile) p += "pgo-";
+  if(options.coverage) p += "coverage-";
+  if(options.debugsyms) p += "debugsyms-";
+  if(options.debugmode) p += "debugmode-";
+  if(options.warnings) p += "warnings-";
+  if(options.gcc) p += "gcc-";
+  if(options.libcxx) p += "libcxx-";
+  if(options.examples) p += "examples-";
+  if(options.tests) p += "tests-";
+  if(!options.target_era.empty()) p += options.target_era + "-";
+
+  // Remove last dash character
+  p.pop_back();
+  return p;
+}
+}
+
+int main(int argc, char** argv) try
+{
+  // Sanity checks
+  if(!check_environment())
+    return 1;
+
+  // Set-up
+  const auto options = parse_options(argc, argv);
+
+  const auto cmd = generate_cmake_call(options);
+  const auto build_path = generate_build_path(options);
+
+  // Create or go to build folder
+  namespace fs = std::filesystem;
+  {
+    fs::create_directory(build_path);
+
+    std::error_code ec;
+    fs::current_path(build_path, ec);
+    if(ec) {
+      std::cout << "Could not cd into " << build_path << " ; aborting.";
+      return 1;
+    }
+  }
+
+  // Run cmake if necessary
+  if (!fs::exists("build.ninja"))
+  {
+    std::cout << "Configuring: \n$ " << cmd << std::endl;
+    if(int ret = system(cmd.c_str()); ret != 0) {
+      return ret;
+    }
+  }
+
+  if (!fs::exists("build.ninja"))
+  {
+    return 1;
+  }
+
+  return system("cmake --build .");
+}
+catch (const std::exception& e)
 {
   std::cerr << e.what() << std::endl;
-
   return 1;
 }
