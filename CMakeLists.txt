@@ -60,4 +60,5 @@ endforeach()
 
 # Packaging
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_GENERATOR "ZIP")
 include(CPack)

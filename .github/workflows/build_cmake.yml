@@ -68,4 +68,4 @@ jobs:
     #   run: cd build && ctest -V
 
     - name: deploy
-      run: cd build && cpack -G ZIP
+      run: cd build && cmake --build . --target package
