@@ -20,8 +20,8 @@ A project trying to set 22th century defaults to CMake calls, with a simplified 
     # Produces a release build with debug symbols in "build"
     $ cninja
 
-    # Produces a build in "build-static-lto"
-    $ cninja static lto
+    # Produces a build in "build-static-thin-lto"
+    $ cninja static thin-lto
 
     # Produces a build in "build-asan-ubsan-debugsyms-examples-tests"
     $ cninja asan ubsan debugsyms tests examples
