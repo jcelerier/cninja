@@ -12,7 +12,7 @@ jobs:
         config:
         - {
             name: "Windows",
-            artifact: "cninja-1.0.0-Windows.zip",
+            artifact: "build/cninja-1.0.0-Windows.zip",
             os: windows-latest,
             build_type: "Release",
             cxx: "../llvm-mingw/bin/clang++.exe",
@@ -20,7 +20,7 @@ jobs:
           }
         - {
             name: "Ubuntu",
-            artifact: "cninja-1.0.0-Linux.zip",
+            artifact: "build/cninja-1.0.0-Linux.zip",
             os: ubuntu-latest,
             build_type: "Release",
             cxx: "clang++-9",
@@ -28,7 +28,7 @@ jobs:
           }
         - {
             name: "macOS",
-            artifact: "cninja-1.0.0-Darwin.zip",
+            artifact: "build/cninja-1.0.0-Darwin.zip",
             os: macos-latest,
             build_type: "Release",
             cxx: "clang++",
@@ -62,10 +62,10 @@ jobs:
     - name: make
       run: cd build && cmake --build .
 
-    - name: test
-      env:
-        CTEST_PARALLEL_LEVEL: 8
-      run: cd build && ctest -V
+    # - name: test
+    #   env:
+    #     CTEST_PARALLEL_LEVEL: 8
+    #   run: cd build && ctest -V
 
     - name: deploy
       run: cd build && cpack -G ZIP

@@ -190,9 +190,8 @@ Options parse_options(int argc, char** argv)
 {
   Options options{};
 
-  cxxopts::Options args{argv[0], " - an opinionated CMake frontend"};
-  args.positional_help("[optional args]")
-      .show_positional_help()
+  cxxopts::Options args{"cninja", "cninja - an opinionated cmake frontend"};
+  args.show_positional_help()
   ;
 
   args.add_options()
@@ -571,12 +570,12 @@ std::string generate_build_path(Options options)
 
 int main(int argc, char** argv) try
 {
+  // Set-up
+  const auto options = parse_options(argc, argv);
+
   // Sanity checks
   if(!check_environment())
     return 1;
-
-  // Set-up
-  const auto options = parse_options(argc, argv);
 
   const auto cmd = generate_cmake_call(options);
   const auto build_path = generate_build_path(options);
@@ -607,6 +606,6 @@ int main(int argc, char** argv) try
 }
 catch (const std::exception& e)
 {
-  std::cerr << e.what() << std::endl;
+  std::cerr << e.what() << "\nRun \"cninja help\" for help." << std::endl;
   return 1;
 }
