@@ -54,7 +54,7 @@ jobs:
         CXX: ${{ matrix.config.cxx }}
       run: |
         env
-        mkdir build && cd build && cmake ..
+        mkdir build && cd build && cmake -GNinja ..
 
     - name: make
       run: cd build && cmake --build .

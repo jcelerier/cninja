@@ -5,7 +5,7 @@
 namespace fs = std::filesystem;
 namespace
 {
-constexpr const struct System
+static const struct System
 {
   static constexpr bool os_apple{
 #if defined(__APPLE__)
@@ -19,11 +19,40 @@ constexpr const struct System
 #endif
   };
 
-  static  constexpr bool os_windows{
+  static constexpr bool os_windows{
 #if defined(_WIN32)
     true
 #endif
   };
+
+  const std::string clang_binary = [] () {
+    if(fs::exists("clang-11"))
+      return "clang-11";
+    else if(fs::exists("clang-10"))
+      return "clang-10";
+    else if(fs::exists("clang-9"))
+      return "clang-9";
+    else if(fs::exists("clang-8"))
+      return "clang-9";
+    else if(fs::exists("clang"))
+      return "clang";
+    else
+      return "";
+  }();
+  const std::string clangpp_binary = [] () {
+    if(fs::exists("clang++-11"))
+      return "clang++-11";
+    else if(fs::exists("clang++-10"))
+      return "clang++-10";
+    else if(fs::exists("clang++-9"))
+      return "clang++-9";
+    else if(fs::exists("clang++-8"))
+      return "clang++-9";
+    else if(fs::exists("clang++"))
+      return "clang++";
+    else
+      return "";
+  }();
 } sys;
 
 constexpr bool is_libcxx_default() noexcept
@@ -46,10 +75,10 @@ std::string uppercase(std::string s) noexcept
   return s;
 }
 
-bool check_command(const char* command)
+bool check_command(const std::string& command)
 {
   std::cout << "Checking: " << command << "\n";
-  int res = system(command);
+  int res = system(command.c_str());
   std::cout << "\n";
   return res == 0;
 }
@@ -70,13 +99,17 @@ bool check_environment() noexcept
     return false;
   }
 
+  const std::string clang_test_command =
 #if (_WIN32)
-  if(!check_command("echo 'int main(){}' | clang -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"))
+  "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"
 #elif (__APPLE__)
-  if(!check_command("echo 'int main(){}' | clang -x c++ - -o /dev/null"))
+  "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ - -o /dev/null"
 #else
-  if(!check_command("echo 'int main(){}' | clang -x c++ -stdlib=libc++ -fuse-ld=lld - -o /dev/null"))
+  "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o /dev/null"
 #endif
+  ;
+
+  if(sys.clangpp_binary.empty() || !check_command(clang_test_command))
   {
     if constexpr(sys.os_linux)
     {
@@ -442,16 +475,6 @@ std::string generate_cmake_call(Options options)
     }
   }
 
-  std::string clang_suffix;
-  if(fs::exists("clang++-11"))
-    clang_suffix = "-11";
-  else if(fs::exists("clang++-10"))
-    clang_suffix = "-10";
-  else if(fs::exists("clang++-9"))
-    clang_suffix = "-9";
-  else if(fs::exists("clang++-8"))
-    clang_suffix = "-8";
-
   std::string cmd;
   cmd += "cmake"
          " -Wno-dev \\\n"
@@ -461,8 +484,8 @@ std::string generate_cmake_call(Options options)
 
          " -G\"Ninja\" \\\n"
 
-         " -DCMAKE_C_COMPILER=clang" + clang_suffix + " \\\n"
-         " -DCMAKE_CXX_COMPILER=clang++" + clang_suffix + " \\\n"
+         " -DCMAKE_C_COMPILER=" + sys.clang_binary + " \\\n"
+         " -DCMAKE_CXX_COMPILER=" + sys.clangpp_binary + " \\\n"
 
          " -DCMAKE_C_FLAGS=\"" + cflags + "\" \\\n"
          " -DCMAKE_CXX_FLAGS=\"" + cflags + "\" \\\n"
