@@ -46,7 +46,7 @@ Running for instance
 
 in my home directory reveals almost 30 distinct variables used in various CMake scripts to enable sanitizers... and even more if I also match CMakeLists.txt files. 
 
-![No More !](https://i.gifer.com/DmH5.gif)
+![No More !](https://66.media.tumblr.com/1e058c57c5907d24aa2a8508fe533fdc/tumblr_mx3vrl8ge41qjoke8o2_250.gif)
 
 # "Is cninja for me ?"
 
