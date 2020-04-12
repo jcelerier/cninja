@@ -1,4 +1,5 @@
 # cninja - an opinionated frontend to cmake
+![Build status](https://github.com/jcelerier/cninja/workflows/Build/badge.svg)
 
 A project trying to set 22th century defaults to CMake calls, with a simplified syntax for the most common needs during development.
 
@@ -99,3 +100,7 @@ in my home directory reveals almost 30 distinct variables used in various CMake 
 - Some kind of improved support for common libraries
     - Looking for Qt in `~/Qt/system/latest_version`
     - Looking for Qt in `c:/Qt/system/latest_version`
+
+# Thanks
+
+Cristian Adam for his [blog post on using Github actions](https://cristianadam.eu/20191222/using-github-actions-with-c-plus-plus-and-cmake/).
