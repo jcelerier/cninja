@@ -14,6 +14,9 @@
 
 #include <fmt/printf.h>
 
+#if defined(_WIN32)
+#undef small // seriously win32...
+#endif
 namespace fs = ghc::filesystem;
 namespace
 {
