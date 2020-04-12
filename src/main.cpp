@@ -317,7 +317,7 @@ std::string generate_cmake_call(Options options)
       options.full_lto = true;
 
     cflags += " -Ofast -march=native ";
-    lflags += " -Ofast -march=native -Wl,--icf=safe -Wl,-O3 ";
+    lflags += " -Ofast -march=native -Wl,--icf=all -Wl,--strip-all -Wl,-O3 ";
   }
   else if(options.small)
   {
@@ -329,7 +329,7 @@ std::string generate_cmake_call(Options options)
     else
     {
       // No debug info, strip symbols when linking
-      lflags += " -g0 -s -Wl,-s ";
+      lflags += " -g0 -s -Wl,-s -Wl,--icf=all -Wl,--strip-all ";
     }
   }
   else if(options.debugsyms)
@@ -417,6 +417,16 @@ std::string generate_cmake_call(Options options)
   if(options.staticbuild)
   {
     exe_lflags += " -static-libgcc -static-libstdc++ -static ";
+    if(options.libcxx)
+    {
+      exe_lflags += "  -lc++abi -lpthread ";
+    }
+  }
+
+  if(options.libcxx)
+  {
+    cflags += " -stdlib=libc++";
+    lflags += " -stdlib=libc++";
   }
 
   if(options.warnings)
