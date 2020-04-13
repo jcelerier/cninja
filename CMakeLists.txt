@@ -17,9 +17,9 @@ target_sources(cninja
     src/main.cpp
 )
 
-target_compile_options(cninja
+target_compile_features(cninja
   PRIVATE
-    $<IF:$<BOOL:${WIN32}>,/std:c++latest,-std=c++1z>
+    cxx_std_17
 )
 
 # Install target

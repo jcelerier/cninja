@@ -49,7 +49,7 @@ static const struct System
     if constexpr(os_windows)
     {
       while(std::getline(ss, folder, ';'))
-        if(fs::exists(folder + "\\" + exe))
+        if(fs::exists(folder + "\\" + exe + ".exe"))
           return true;
     }
     else
@@ -137,7 +137,7 @@ bool check_environment() noexcept
 
   const std::string clang_test_command =
 #if (_WIN32)
-  "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"
+  "echo int main(){} | " + sys.clangpp_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"
 #elif (__APPLE__)
   "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ - -o /dev/null"
 #else
@@ -290,12 +290,6 @@ std::string generate_cmake_call(Options options)
         // LLD is a much faster linker : https://lld.llvm.org
         " -fuse-ld=lld"
 
-        // We can tell lld to use threads
-        " -Wl,--threads"
-
-        // Makes debugging faster
-        " -Wl,--gdb-index"
-
         // In conjunction with ffunction-sections / fdata-sections, removes unused code
         " -Wl,--gc-sections"
 
@@ -303,6 +297,16 @@ std::string generate_cmake_call(Options options)
         " -Bsymbolic"
         " -Bsymbolic-functions"
     ;
+
+    if constexpr(!sys.os_windows)
+    {
+      lflags +=
+        // We can tell lld to use threads
+        " -Wl,--threads"
+
+        // Makes debugging faster
+        " -Wl,--gdb-index";
+    }
   }
 
   // General configuration flags
@@ -527,47 +531,53 @@ std::string generate_cmake_call(Options options)
     }
   }
 
+#if defined(_WIN32)
+#define CONTINUE " "
+#else
+#define CONTINUE "\\\n" 
+#endif
+
   std::string cmd;
   cmd += "cmake"
-         " -Wno-dev \\\n"
-         " --no-warn-unused-cli \\\n"
+         " -Wno-dev" CONTINUE
+         " --no-warn-unused-cli" CONTINUE
 
          " .."
 
-         " -G\"Ninja\" \\\n"
+         " -G\"Ninja\"" CONTINUE
 
-         " -DCMAKE_BUILD_TYPE=" + config + " \\\n"
+         " -DCMAKE_BUILD_TYPE=" + config + "" CONTINUE
 
-         " -DCMAKE_C_COMPILER=" + sys.clang_binary + " \\\n"
-         " -DCMAKE_CXX_COMPILER=" + sys.clangpp_binary + " \\\n"
+         " -DCMAKE_C_COMPILER=" + sys.clang_binary + "" CONTINUE
+         " -DCMAKE_CXX_COMPILER=" + sys.clangpp_binary + "" CONTINUE
 
-         " -DCMAKE_C_FLAGS=\"" + cflags + "\" \\\n"
-         " -DCMAKE_CXX_FLAGS=\"" + cflags + "\" \\\n"
-         " -DCMAKE_EXE_LINKER_FLAGS=\"" + lflags + exe_lflags + "\" \\\n"
-         " -DCMAKE_SHARED_LINKER_FLAGS=\"" + lflags + "\" \\\n"
+         " -DCMAKE_C_FLAGS=\"" + cflags + "\"" CONTINUE
+         " -DCMAKE_CXX_FLAGS=\"" + cflags + "\"" CONTINUE
+         " -DCMAKE_EXE_LINKER_FLAGS=\"" + lflags + exe_lflags + "\"" CONTINUE
+         " -DCMAKE_SHARED_LINKER_FLAGS=\"" + lflags + "\"" CONTINUE
 
-         " -DCMAKE_INSTALL_PREFIX=install \\\n"
+         " -DCMAKE_INSTALL_PREFIX=install" CONTINUE
 
          // Some libraries expect -fPIC
-         " -DCMAKE_POSITION_INDEPENDENT_CODE=1 \\\n"
+         " -DCMAKE_POSITION_INDEPENDENT_CODE=1" CONTINUE
 
          // Useful for running various tools, integrations in IDEs...
-         " -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \\\n"
+         " -DCMAKE_EXPORT_COMPILE_COMMANDS=1" CONTINUE
 
          // We are in 2020
-         " -DCMAKE_CXX_STANDARD=20 \\\n"
+         " -DCMAKE_CXX_STANDARD=20" CONTINUE
 
          // If you CI run looks like
          // $ cmake --build .
          // $ cmake --build . --target install
          // this will make it faster:
-         " -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=1 \\\n"
+         " -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=1" CONTINUE
 
          // Hide all symbols by default.
          // Use GenerateExportHeader !
-         " -DCMAKE_C_VISIBILITY_PRESET=hidden \\\n"
-         " -DCMAKE_CXX_VISIBILITY_PRESET=hidden \\\n"
-         " -DCMAKE_VISIBILITY_INLINES_HIDDEN=1 \\\n"
+         " -DCMAKE_C_VISIBILITY_PRESET=hidden" CONTINUE
+         " -DCMAKE_CXX_VISIBILITY_PRESET=hidden" CONTINUE
+         " -DCMAKE_VISIBILITY_INLINES_HIDDEN=1" CONTINUE
 
          + cmakeflags
   ;
