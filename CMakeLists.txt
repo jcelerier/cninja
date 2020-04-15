@@ -10,11 +10,22 @@ target_include_directories(cninja
     3rdparty/cxxopts/include
     3rdparty/fmt/include
     3rdparty/filesystem/include
+
+    src/
 )
 
 target_sources(cninja
   PRIVATE
     src/main.cpp
+
+    src/cn/check.hpp
+    src/cn/config.hpp
+    src/cn/fmt.hpp
+    src/cn/fs.hpp
+    src/cn/generate.hpp
+    src/cn/options.hpp
+    src/cn/system.hpp
+    src/cn/util.hpp
 )
 
 target_compile_features(cninja

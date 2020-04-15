@@ -1,0 +1,365 @@
+#pragma once
+#include <cn/options.hpp>
+#include <cn/config.hpp>
+#include <cn/system.hpp>
+#include <cn/util.hpp>
+
+namespace cn
+{
+static
+std::string generate_cmake_call(Options options)
+{
+  std::string config;
+  std::string cmakeflags;
+  std::string cflags;
+  std::string lflags;
+  std::string exe_lflags;
+
+  // Common options
+  cflags +=
+      // Potentially makes the build faster
+      " -pipe"
+
+      // Allows to discard unused code more easily with --gc-sections
+      " -ffunction-sections"
+      " -fdata-sections"
+  ;
+
+  if constexpr(sys.os_windows)
+  {
+    // Remove obnoxious default <windows.h> features
+    cflags +=
+        " -DNOMINMAX" // min() / max() macros
+        " -D_CRT_SECURE_NO_WARNINGS" // secure versions are not portable, don't use them
+        " -DWIN32_LEAN_AND_MEAN" // makes including <windows.h> faster
+    ;
+  }
+
+  if constexpr(!sys.os_apple)
+  {
+    lflags +=
+        // LLD is a much faster linker : https://lld.llvm.org
+        " -fuse-ld=lld"
+
+        // In conjunction with ffunction-sections / fdata-sections, removes unused code
+        " -Wl,--gc-sections"
+
+        // Use deep linking semantics on all platforms
+        " -Bsymbolic"
+        " -Bsymbolic-functions"
+    ;
+
+    if constexpr(!sys.os_windows)
+    {
+      lflags +=
+        // We can tell lld to use threads
+        " -Wl,--threads"
+
+        // Makes debugging faster
+        " -Wl,--gdb-index";
+    }
+  }
+
+  // General configuration flags
+  if(options.fast)
+  {
+    if(options.debugsyms)
+    {
+      config = "RelWithDebInfo";
+    }
+    else
+    {
+      config = "Release";
+
+      // No debug info, strip symbols when linking
+      lflags += " -g0 -s -Wl,-s ";
+    }
+
+    // By default enable LTO
+    if(!options.thin_lto)
+      options.full_lto = true;
+
+    cflags += " -Ofast -march=native ";
+    lflags += " -Ofast -march=native -Wl,--icf=all -Wl,--strip-all -Wl,-O3 ";
+  }
+  else if(options.small)
+  {
+    config = "MinSizeRel";
+    if(options.debugsyms)
+    {
+      cflags += " -g ";
+    }
+    else
+    {
+      // No debug info, strip symbols when linking
+      lflags += " -g0 -s -Wl,-s -Wl,--icf=all -Wl,--strip-all ";
+    }
+  }
+  else if(options.debugsyms)
+  {
+    config = "RelWithDebInfo";
+  }
+  else
+  {
+    config = "Release";
+  }
+
+  // Checks iterators and invariants in the stdlib and common libraries
+  if(options.debugmode)
+  {
+    config = "Debug";
+    if(options.libcxx)
+    {
+      // See https://libcxx.llvm.org/docs/DesignDocs/DebugMode.html
+      cflags +=
+          " -D_LIBCPP_DEBUG=1 "
+      ;
+    }
+    else
+    {
+      // See https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
+      cflags +=
+          " -D_GLIBCXX_DEBUG=1 "
+          " -D_GLIBCXX_DEBUG_PEDANTIC=1 "
+      ;
+    }
+    // Note : Windows's stdlib has support for that too,
+    // but we're mostly concerned with libc++
+    // https://docs.microsoft.com/en-us/cpp/standard-library/iterator-debug-level
+
+    // Boost.MultiIndex comes with similar abilities :
+    // https://www.boost.org/doc/libs/1_72_0/libs/multi_index/doc/tutorial/debug.html
+    cflags +=
+        " -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1 "
+        " -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1 "
+    ;
+  }
+
+
+  if(options.full_lto)
+  {
+    // Maximal optimization. Also needed for some optimizations to work.
+    cflags += " -flto=full -fwhole-program-vtables ";
+    lflags += " -flto=full -fwhole-program-vtables ";
+    // Will only be available in clang-11:
+    // -fvirtual-function-elimination
+  }
+  else if(options.thin_lto)
+  {
+    // https://clang.llvm.org/docs/ThinLTO.html
+    // Builds faster than -flto=full but enables less optimizations
+    cflags += " -flto=thin ";
+    lflags += " -flto=thin ";
+  }
+
+  // Note that the ASAN and UBSAN cannot work in conjunction with TSAN.
+  if(options.asan)
+  {
+    cflags += " -fsanitize=address -fno-omit-frame-pointer ";
+    lflags += " -fsanitize=address -fno-omit-frame-pointer ";
+
+    if(options.gcc)
+    {
+      // GCC does not have that by default, clang does
+      cflags += "-D_GLIBCXX_SANITIZE_VECTOR";
+    }
+  }
+
+  if(options.ubsan)
+  {
+    cflags += " -fsanitize=undefined -fsanitize=integer ";
+    lflags += " -fsanitize=undefined -fsanitize=integer ";
+  }
+
+  if(!options.asan && !options.ubsan && options.tsan)
+  {
+    cflags += " -fsanitize=thread ";
+    lflags += " -fsanitize=thread ";
+  }
+
+  // Produce fully static executables
+  if(options.staticbuild)
+  {
+    exe_lflags += " -static-libgcc -static-libstdc++ -static ";
+    if(options.libcxx)
+    {
+      exe_lflags += "  -lc++abi -lpthread ";
+    }
+  }
+
+  if(options.libcxx)
+  {
+    cflags += " -stdlib=libc++";
+    lflags += " -stdlib=libc++";
+  }
+
+  if(options.warnings)
+  {
+    cflags +=
+      " -Wall"
+      " -Wextra"
+      " -pedantic"
+      " -Wmisleading-indentation"
+      " -Wnon-virtual-dtor"
+      " -Wunused"
+      " -Woverloaded-virtual"
+      " -Werror=return-type"
+      " -Werror=trigraphs"
+      " -Wmissing-field-initializers"
+      " -Wno-unused-parameter"
+      " -Wno-unknown-pragmas"
+      " -Wno-missing-braces"
+      " -Wno-gnu-statement-expression"
+      " -Wno-four-char-constants"
+      " -Wno-cast-align"
+      " -Wno-unused-local-typedef "
+    ;
+
+    // Check that all the functions we are calling do indeed exist
+    // to prevent runtime crashes
+    if constexpr(sys.os_apple)
+    {
+      lflags +=
+          " -Wl,-fatal_warnings"
+          " -Wl,-undefined,dynamic_lookup "
+      ;
+    }
+    else
+    {
+      lflags +=
+          " -Wl,-z,defs"
+          " -Wl,-z,now"
+          " -Wl,--unresolved-symbols,report-all "
+          " -Wl,--warn-unresolved-symbols "
+          " -Wl,--no-undefined "
+          " -Wl,--no-allow-shlib-undefined "
+          " -Wl,--no-allow-multiple-definition "
+      ;
+    }
+  }
+
+  if(options.examples)
+  {
+    cmakeflags +=
+        " -DBUILD_EXAMPLES=ON"
+    ;
+  }
+  else
+  {
+    // Disable macro names commonly used
+    cmakeflags +=
+        " -DBUILD_EXAMPLE=OFF"
+        " -DBUILD_EXAMPLES=OFF"
+    ;
+  }
+  if(options.tests)
+  {
+    // Official CMake variable name for tests
+    cmakeflags +=
+        " -DBUILD_TESTING=ON"
+    ;
+  }
+  else
+  {
+    // Disable macro names commonly used
+    cmakeflags +=
+        " -DWITH_TESTS=OFF"
+        " -DBUILD_TEST=OFF"
+        " -DBUILD_TESTS=OFF"
+        " -DBUILD_TESTING=OFF"
+    ;
+  }
+
+  if(!options.target_era.empty())
+  {
+    if constexpr(sys.os_apple)
+    {
+      cmakeflags += " -DCMAKE_OSX_DEPLOYMENT_TARGET=" + options.target_era;
+    }
+    else if constexpr(sys.os_windows)
+    {
+      cflags += " -D_WIN32_WINNT_=_WIN32_WINNT_" + uppercase(options.target_era);
+    }
+  }
+
+#if defined(_WIN32)
+#define CONTINUE " "
+#else
+#define CONTINUE "\\\n"
+#endif
+
+  std::string cmd;
+  cmd += "cmake"
+         " -Wno-dev" CONTINUE
+         " --no-warn-unused-cli" CONTINUE
+
+         " .."
+
+         " -G\"Ninja\"" CONTINUE
+
+         " -DCMAKE_BUILD_TYPE=" + config + "" CONTINUE
+
+         " -DCMAKE_C_COMPILER=" + sys.clang_binary + "" CONTINUE
+         " -DCMAKE_CXX_COMPILER=" + sys.clangpp_binary + "" CONTINUE
+
+         " -DCMAKE_C_FLAGS=\"" + cflags + "\"" CONTINUE
+         " -DCMAKE_CXX_FLAGS=\"" + cflags + "\"" CONTINUE
+         " -DCMAKE_EXE_LINKER_FLAGS=\"" + lflags + exe_lflags + "\"" CONTINUE
+         " -DCMAKE_SHARED_LINKER_FLAGS=\"" + lflags + "\"" CONTINUE
+
+         " -DCMAKE_INSTALL_PREFIX=install" CONTINUE
+
+         // Some libraries expect -fPIC
+         " -DCMAKE_POSITION_INDEPENDENT_CODE=1" CONTINUE
+
+         // Useful for running various tools, integrations in IDEs...
+         " -DCMAKE_EXPORT_COMPILE_COMMANDS=1" CONTINUE
+
+         // We are in 2020
+         " -DCMAKE_CXX_STANDARD=20" CONTINUE
+
+         // If you CI run looks like
+         // $ cmake --build .
+         // $ cmake --build . --target install
+         // this will make it faster:
+         " -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=1" CONTINUE
+
+         // Hide all symbols by default.
+         // Use GenerateExportHeader !
+         " -DCMAKE_C_VISIBILITY_PRESET=hidden" CONTINUE
+         " -DCMAKE_CXX_VISIBILITY_PRESET=hidden" CONTINUE
+         " -DCMAKE_VISIBILITY_INLINES_HIDDEN=1" CONTINUE
+
+         + cmakeflags
+  ;
+  return cmd;
+}
+
+static
+std::string generate_build_path(Options options)
+{
+  std::string p = "build-";
+  if(options.fast) p += "fast-";
+  if(options.small) p += "small-";
+  if(options.full_lto) p += "full-lto-";
+  if(options.thin_lto) p += "thin-lto-";
+  if(options.asan) p += "asan-";
+  if(options.ubsan) p += "ubsan-";
+  if(options.tsan) p += "tsan-";
+  if(options.staticbuild) p += "static-";
+  if(options.profile) p += "pgo-";
+  if(options.coverage) p += "coverage-";
+  if(options.debugsyms) p += "debugsyms-";
+  if(options.debugmode) p += "debugmode-";
+  if(options.warnings) p += "warnings-";
+  if(options.gcc) p += "gcc-";
+  if(options.libcxx) p += "libcxx-";
+  if(options.examples) p += "examples-";
+  if(options.tests) p += "tests-";
+  if(!options.target_era.empty()) p += options.target_era + "-";
+
+  // Remove last dash character
+  p.pop_back();
+  return p;
+}
+}
