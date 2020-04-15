@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
+#include <algorithm>
 
 namespace cn
 {
-static
+inline
 std::string uppercase(std::string s) noexcept
 {
   std::transform(

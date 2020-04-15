@@ -16,7 +16,6 @@ int main(int argc, char** argv) try
   // If we are in a build dir we just run a build
   if(!fs::exists("build.ninja"))
   {
-    const auto cmd = generate_cmake_call(options);
     const auto build_path = generate_build_path(options);
 
     // Create or go to build folder
@@ -34,6 +33,13 @@ int main(int argc, char** argv) try
     // Run cmake if necessary
     if (!fs::exists("build.ninja"))
     {
+      fmt::print("Creating toolchain file...\n");
+      {
+        std::ofstream f("cninja-toolchain.cmake");
+        f << generate_toolchain(options);
+      }
+
+      const auto cmd = generate_cmake_call(options);
       fmt::print("Configuring: \n$ {}\n", cmd);
       if(int ret = system(cmd.c_str()); ret != 0) {
         return ret;

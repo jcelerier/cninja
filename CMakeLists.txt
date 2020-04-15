@@ -18,14 +18,23 @@ target_sources(cninja
   PRIVATE
     src/main.cpp
 
+    src/cn/builtins.hpp
     src/cn/check.hpp
     src/cn/config.hpp
     src/cn/fmt.hpp
     src/cn/fs.hpp
+    src/cn/graph.hpp
     src/cn/generate.hpp
     src/cn/options.hpp
     src/cn/system.hpp
     src/cn/util.hpp
+
+    src/cn/builtins.cpp
+    src/cn/check.cpp
+    src/cn/config.cpp
+    src/cn/generate.cpp
+    src/cn/graph.cpp
+    src/cn/options.cpp
 )
 
 target_compile_features(cninja

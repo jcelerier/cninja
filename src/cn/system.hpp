@@ -29,7 +29,7 @@ static const struct System
   // somewhere in the path
   static bool is_in_path(std::string exe) noexcept
   {
-    std::stringstream ss(getenv("PATH"));
+    std::stringstream ss(std::getenv("PATH"));
     std::string folder;
     if constexpr(os_windows)
     {
