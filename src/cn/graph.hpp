@@ -27,6 +27,12 @@ private:
     struct comparator
     {
       using is_transparent = std::true_type;
+      bool operator()(const std::unique_ptr<node>& lhs, const std::unique_ptr<node>& rhs) const
+          noexcept
+      {
+        return std::less<>{}(lhs->name, rhs->name);
+      }
+
       bool operator()(const node* lhs, const std::unique_ptr<node>& rhs) const noexcept
       {
         return std::less<>{}(lhs->name, rhs->name);
@@ -35,16 +41,21 @@ private:
       {
         return std::less<>{}(lhs->name, rhs->name);
       }
-      bool operator()(const std::unique_ptr<node>& lhs, const std::unique_ptr<node>& rhs) const
-          noexcept
-      {
-        return std::less<>{}(lhs->name, rhs->name);
-      }
+
       bool operator()(const std::unique_ptr<node>& lhs, const std::string& rhs) const noexcept
       {
         return std::less<>{}(lhs->name, rhs);
       }
       bool operator()(const std::string& lhs, const std::unique_ptr<node>& rhs) const noexcept
+      {
+        return std::less<>{}(lhs, rhs->name);
+      }
+
+      bool operator()(const std::unique_ptr<node>& lhs, std::string_view rhs) const noexcept
+      {
+        return std::less<>{}(lhs->name, rhs);
+      }
+      bool operator()(std::string_view lhs, const std::unique_ptr<node>& rhs) const noexcept
       {
         return std::less<>{}(lhs, rhs->name);
       }
@@ -67,7 +78,7 @@ private:
 
   static std::pair<std::string, std::string>
   split_name_and_argument(const std::string_view& input) noexcept;
-  node* insert_content(const std::string_view& key, std::string content);
+  node* insert_content(std::string_view name, std::string_view argument, std::string content);
   static bool is_fixed_stage(std::string_view name) noexcept;
 
   node* m_startStage{};

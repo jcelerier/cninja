@@ -44,15 +44,16 @@ fs::path get_home_folder()
 }
 }
 
-std::optional<std::string> read_config_file(const std::string_view name)
+std::optional<std::string> read_config_file(const std::string& name)
 {
   auto cur_path = fs::current_path();
+  const std::string full_name = name + ".cmake";
 
   // First check the arborescence going from the current folder to the root.
   const auto root_path = (cur_path.root_path() / cur_path.root_directory());
   for (;;)
   {
-    const auto config_path = cur_path / ".cninja" / name;
+    const auto config_path = cur_path / ".cninja" / full_name;
     if (fs::exists(config_path))
       return read_file(config_path);
 
@@ -65,7 +66,7 @@ std::optional<std::string> read_config_file(const std::string_view name)
   // If we haven't found anyhting, look into the home folder.
   if(auto home = get_home_folder(); !home.empty())
   {
-    const auto config_path = home / ".cninja" / name;
+    const auto config_path = home / ".config" / "cninja" / full_name;
     if (fs::exists(config_path))
       return read_file(config_path);
   }

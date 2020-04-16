@@ -59,14 +59,27 @@ set(CMAKE_CXX_STANDARD_LIBRARIES " -stdlib=libc++")
 
     map["fast"] =
         R"_(# Creates a build optimized for this machine
-cninja_requires(lto=full)
+cninja_require(lto=full)
+cninja_optional(debugsyms)
 string(APPEND CMAKE_C_FLAGS_INIT " -Ofast -march=native")
 string(APPEND CMAKE_CXX_FLAGS_INIT " -Ofast -march=native")
-string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Ofast -march=native -Wl,--icf=all -Wl,--strip-all -Wl,-O3")
-string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Ofast -march=native -Wl,--icf=all -Wl,--strip-all -Wl,-O3")
+string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Ofast -march=native -Wl,--icf=all -Wl,-O3")
+string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Ofast -march=native -Wl,--icf=all -Wl,-O3")
+if(NOT debugsyms IN_LIST CNINJA_FEATURES)
+  string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Wl,--strip-all")
+  string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Wl,--strip-all")
+endif()
     )_";
     map["small"] =
         R"_(# Creates a small build
+cninja_require(lto=full)
+cninja_optional(debugsyms)
+string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Wl,--icf=all -Wl,--strip-all -Wl,-O3")
+string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Wl,--icf=all -Wl,--strip-all -Wl,-O3")
+if(NOT debugsyms IN_LIST CNINJA_FEATURES)
+  string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Wl,--strip-all")
+  string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Wl,--strip-all")
+endif()
     )_";
 
     map["lto"] =
@@ -83,9 +96,31 @@ string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -flto=%lto% -fwhole-program-vtabl
 
     map["debugmode"] =
         R"_(# Enable runtime debug checking (e.g. iterator validity checkers)
+set(CMAKE_BUILD_TYPE Debug)
+
+if(libcxx IN_LIST CNINJA_FEATURES)
+  # See https://libcxx.llvm.org/docs/DesignDocs/DebugMode.html
+  string(APPEND CMAKE_CXX_FLAGS " -D_LIBCPP_DEBUG=1")
+else()
+  # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
+  string(APPEND CMAKE_CXX_FLAGS " -D_GLIBCXX_DEBUG=1 -D_GLIBCXX_DEBUG_PEDANTIC=1")
+endif()
+
+# Note : Windows's stdlib has support for that too,
+# but we're mostly concerned with libc++
+# https://docs.microsoft.com/en-us/cpp/standard-library/iterator-debug-level
+
+# Boost.MultiIndex comes with similar abilities :
+# https://www.boost.org/doc/libs/1_72_0/libs/multi_index/doc/tutorial/debug.html
+string(APPEND CMAKE_CXX_FLAGS " -DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING=1")
+string(APPEND CMAKE_CXX_FLAGS " -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE=1")
 )_";
     map["debugsyms"] =
         R"_(# Enable generation of debug symbols
+
+# -g3 allows debugging into macros unlike the default of -g
+string(APPEND CMAKE_C_FLAGS_INIT " -g3")
+string(APPEND CMAKE_CXX_FLAGS_INIT " -g3")
 )_";
     map["warnings"] =
         R"_(# More compiler warnings
@@ -112,7 +147,9 @@ if(NOT APPLE)
   string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Wl,--gc-sections")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Wl,--gc-sections")
 
-  # In conjunction with ffunction-sections / fdata-sections, removes unused code
+  # Make all platforms behave like Windows, which is in itself terrible but will
+  # spare you trying to debug why dynamic_cast of inline classes across DLLs
+  # doesn't work in MSW - simply don't write code assuming this works anywhere.
   string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -Bsymbolic -Bsymbolic-functions")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " -Bsymbolic -Bsymbolic-functions")
 endif()
@@ -169,6 +206,27 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 )_";
 
+    map["linkerwarnings"] =
+        R"_(# Enforce existence of linked-to functions at compile time
+
+if(APPLE)
+  set(temp_LINKER_WARNINGS "-Wl,-fatal_warnings -Wl,-undefined,dynamic_lookup")
+else()
+  set(temp_LINKER_WARNINGS
+       "-Wl,-z,defs \
+        -Wl,-z,now \
+        -Wl,--unresolved-symbols,report-all \
+        -Wl,--warn-unresolved-symbols \
+        -Wl,--no-undefined \
+        -Wl,--no-allow-shlib-undefined \
+        -Wl,--no-allow-multiple-definition \
+  ")
+endif()
+
+string(APPEND CMAKE_EXE_LINKER_FLAGS_INIT " ${temp_LINKER_WARNINGS}")
+string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " ${temp_LINKER_WARNINGS}")
+unset(temp_LINKER_WARNINGS)
+)_";
     // Default build phases
     map["start"] =
         R"_(
@@ -187,6 +245,7 @@ cninja_require(pre)
 cninja_require(clang)
 cninja_require(lld)
 cninja_require(visibility)
+cninja_require(linkerwarnings)
 
 # -pipe: Potentially makes the build faster
 # -ffunction-sections, etc... : Allows to discard unused code more easily with --gc-sections
@@ -250,10 +309,6 @@ if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Release)
       endif()
     endif()
-  endif()
-
-  if(debugmode IN_LIST CNINJA_FEATURES)
-    set(CMAKE_BUILD_TYPE Debug)
   endif()
 endif()
 )_";

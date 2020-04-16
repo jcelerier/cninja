@@ -24,10 +24,10 @@ namespace cn
 namespace
 {
 // cninja_require(this)
-static inline const std::regex require_regex{R"_(cninja_require\(([a-zA-Z0-9_-]+)\))_"};
+static inline const std::regex require_regex{R"_(cninja_require\(([a-zA-Z0-9_=-]+)\))_"};
 
 // cninja_require(optional)
-static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_-]+)\))_"};
+static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_=-]+)\))_"};
 
 // foo_bar = 10.14
 static inline const std::regex option_regex{R"_(([a-zA-Z0-9_-]+)\s*=\s*([a-zA-Z0-9_.-]+))_"};
@@ -50,17 +50,18 @@ graph::graph(std::vector<std::string_view> options)
 
 graph::node* graph::add_option(const std::string_view& opt)
 {
+  auto [name, argument] = split_name_and_argument(opt);
   // Look in the filesystem
-  if (auto file = read_config_file(opt))
+  if (auto file = read_config_file(name))
   {
-    return insert_content(opt, *std::move(file));
+    return insert_content(name, argument, *std::move(file));
   }
 
   // Look into the cninja builtins
   const auto& bts = cn::builtins();
-  if (auto it = bts.find(opt); it != bts.end())
+  if (auto it = bts.find(name); it != bts.end())
   {
-    return insert_content(it->first, it->second);
+    return insert_content(name, argument, it->second);
   }
 
   // Fail
@@ -142,15 +143,14 @@ graph::split_name_and_argument(const std::string_view& input) noexcept
   return {input_str, {}};
 }
 
-graph::node* graph::insert_content(const std::string_view& key, std::string content)
+graph::node* graph::insert_content(std::string_view name, std::string_view argument, std::string content)
 {
   node* inserted{};
 
   // Handle the foo=bar case
-  auto [name, argument] = split_name_and_argument(key);
   if (!argument.empty())
   {
-    boost::replace_all(content, "%" + name + "%", argument);
+    boost::replace_all(content, "%" + std::string{name} + "%", argument);
   }
 
   // Note that we do not replace existing things, only placeholders.
@@ -169,13 +169,13 @@ graph::node* graph::insert_content(const std::string_view& key, std::string cont
   }
   else
   {
-    auto [it, ok] = m_content.emplace(std::make_unique<node>(node{name, std::move(content)}));
+    auto [it, ok] = m_content.emplace(std::make_unique<node>(node{std::string{name}, std::move(content)}));
     inserted = (*it).get();
     m_index[it->get()] = boost::add_vertex(it->get(), m_graph);
   }
 
   assert(inserted);
-  add_requirements(name, inserted->content);
+  add_requirements(std::string{name}, inserted->content);
 
   // Cleanup the content string a bit
   inserted->content = std::regex_replace(inserted->content, require_regex, "");
