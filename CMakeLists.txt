@@ -53,7 +53,7 @@ install(
 # Tests
 file(COPY tests DESTINATION .)
 
-set(FLAGS fast small full-lto thin-lto asan ubsan tsan debugmode debugsyms warnings gcc libcxx static examples tests)
+set(FLAGS fast small lto=full lto=thin asan ubsan tsan debugmode debugsyms warnings gcc libcxx static examples tests)
 foreach(kind static shared executable)
   add_test(
     NAME ${kind}
