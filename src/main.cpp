@@ -1,8 +1,9 @@
-#include <cn/options.hpp>
 #include <cn/check.hpp>
 #include <cn/generate.hpp>
+#include <cn/options.hpp>
 
-int main(int argc, char** argv) try
+int main(int argc, char** argv)
+try
 {
   using namespace cn;
 
@@ -10,11 +11,11 @@ int main(int argc, char** argv) try
   const auto options = parse_options(argc, argv);
 
   // Sanity checks
-  if(!check_environment())
+  if (!check_environment())
     return 1;
 
   // If we are in a build dir we just run a build
-  if(!fs::exists("build.ninja"))
+  if (!fs::exists("build.ninja"))
   {
     const auto build_path = generate_build_path(options);
 
@@ -24,7 +25,8 @@ int main(int argc, char** argv) try
 
       std::error_code ec;
       fs::current_path(build_path, ec);
-      if(ec) {
+      if (ec)
+      {
         fmt::print("Could not cd into {} ; aborting.\n", build_path);
         return 1;
       }
@@ -41,7 +43,8 @@ int main(int argc, char** argv) try
 
       const auto cmd = generate_cmake_call(options);
       fmt::print("Configuring: \n$ {}\n", cmd);
-      if(int ret = system(cmd.c_str()); ret != 0) {
+      if (int ret = system(cmd.c_str()); ret != 0)
+      {
         return ret;
       }
     }

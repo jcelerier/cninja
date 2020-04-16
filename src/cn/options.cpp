@@ -1,4 +1,5 @@
 #include "options.hpp"
+
 #include <cn/builtins.hpp>
 #include <cn/fmt.hpp>
 
@@ -14,15 +15,15 @@ std::string options_text()
   std::vector<std::string> options;
 
   // Gather all the options with an help text
-  for(auto opt : cn::builtins())
+  for (auto opt : cn::builtins())
   {
-    if(opt.second.size() <= 2)
+    if (opt.second.size() <= 2)
       continue;
 
-    if(opt.second.front() == '#')
+    if (opt.second.front() == '#')
     {
       auto it = opt.second.find_first_of('\n');
-      if(it != std::string::npos)
+      if (it != std::string::npos)
       {
         const auto help_text = std::string_view(opt.second.data() + 2, it - 1);
         options.push_back(fmt::format("  {:<10}\t{}", opt.first, help_text));
@@ -32,7 +33,7 @@ std::string options_text()
 
   // Put them in alphabetical order
   std::sort(options.begin(), options.end());
-  for(const auto& opt : options)
+  for (const auto& opt : options)
     str << opt;
 
   return str.str();
@@ -45,15 +46,16 @@ Options parse_options(int argc, char** argv)
   std::vector<std::string_view> arg_cmake;
 
   bool cmake{};
-  for(int it = 1; it < argc; ++it) {
+  for (int it = 1; it < argc; ++it)
+  {
     std::string_view arg(argv[it]);
-    if(arg == "--")
+    if (arg == "--")
     {
       cmake = true;
       continue;
     }
 
-    if(!cmake)
+    if (!cmake)
       options.options.push_back(arg);
     else
       options.cmake_options.push_back(arg);
@@ -61,7 +63,8 @@ Options parse_options(int argc, char** argv)
 
   if (std::find(options.options.begin(), options.options.end(), "help") != options.options.end())
   {
-    fmt::print(R"_(cninja - an opinionated cmake frontend
+    fmt::print(
+        R"_(cninja - an opinionated cmake frontend
                Usage:
                Invoke cninja with the default options:
                $ cninja
@@ -77,7 +80,8 @@ Options parse_options(int argc, char** argv)
 
                Built-in options:
                {}
-               )_", options_text());
+               )_",
+        options_text());
     std::exit(0);
   }
 

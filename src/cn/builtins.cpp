@@ -1,6 +1,7 @@
 #include "builtins.hpp"
-#include <cn/system.hpp>
+
 #include <cn/fmt.hpp>
+#include <cn/system.hpp>
 namespace cn
 {
 
@@ -42,11 +43,13 @@ string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT " -fsanitize=thread")
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 )_";
-    map["clang"] =
-        fmt::format(R"_(# Use Clang as a compiler (default)
+    map["clang"] = fmt::format(
+        R"_(# Use Clang as a compiler (default)
 set(CMAKE_C_COMPILER {})
 set(CMAKE_CXX_COMPILER {})
-)_", sys.clang_binary, sys.clangpp_binary);
+)_",
+        sys.clang_binary,
+        sys.clangpp_binary);
 
     map["libcxx"] =
         R"_(# Use Clang's libc++ as a standard library (default)

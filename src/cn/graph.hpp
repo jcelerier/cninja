@@ -1,9 +1,11 @@
 ﻿#pragma once
-#include <vector>
-#include <string_view>
-#include <set>
-#include <unordered_map>
 #include <boost/graph/directed_graph.hpp>
+
+#include <set>
+#include <vector>
+
+#include <string_view>
+#include <unordered_map>
 
 namespace cn
 {
@@ -17,25 +19,33 @@ public:
   std::string generate();
 
 private:
-  struct node {
+  struct node
+  {
     std::string name;
     std::string content;
 
-    struct comparator {
+    struct comparator
+    {
       using is_transparent = std::true_type;
-      bool operator()(const node* lhs, const std::unique_ptr<node>& rhs) const noexcept {
+      bool operator()(const node* lhs, const std::unique_ptr<node>& rhs) const noexcept
+      {
         return std::less<>{}(lhs->name, rhs->name);
       }
-      bool operator()(const std::unique_ptr<node>& lhs, const node* rhs) const noexcept {
+      bool operator()(const std::unique_ptr<node>& lhs, const node* rhs) const noexcept
+      {
         return std::less<>{}(lhs->name, rhs->name);
       }
-      bool operator()(const std::unique_ptr<node>& lhs, const std::unique_ptr<node>& rhs) const noexcept {
+      bool operator()(const std::unique_ptr<node>& lhs, const std::unique_ptr<node>& rhs) const
+          noexcept
+      {
         return std::less<>{}(lhs->name, rhs->name);
       }
-      bool operator()(const std::unique_ptr<node>& lhs, const std::string& rhs) const noexcept {
+      bool operator()(const std::unique_ptr<node>& lhs, const std::string& rhs) const noexcept
+      {
         return std::less<>{}(lhs->name, rhs);
       }
-      bool operator()(const std::string& lhs, const std::unique_ptr<node>& rhs) const noexcept {
+      bool operator()(const std::string& lhs, const std::unique_ptr<node>& rhs) const noexcept
+      {
         return std::less<>{}(lhs, rhs->name);
       }
     };
@@ -55,7 +65,8 @@ private:
   // "from" depends on "to"
   void add_dependency(const std::string& from, const std::string& to);
 
-  static std::pair<std::string, std::string> split_name_and_argument(const std::string_view& input) noexcept;
+  static std::pair<std::string, std::string>
+  split_name_and_argument(const std::string_view& input) noexcept;
   node* insert_content(const std::string_view& key, std::string content);
   static bool is_fixed_stage(std::string_view name) noexcept;
 

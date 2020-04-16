@@ -1,22 +1,22 @@
 #include "graph.hpp"
 
-#include <cn/config.hpp>
-#include <cn/builtins.hpp>
-#include <cn/fmt.hpp>
-
-#include <boost/graph/directed_graph.hpp>
-#include <boost/graph/topological_sort.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/graph/directed_graph.hpp>
+#include <boost/graph/topological_sort.hpp>
+
+#include <cn/builtins.hpp>
+#include <cn/config.hpp>
+#include <cn/fmt.hpp>
 #if defined(CNINJA_DEBUG_GRAPH)
 #include <boost/graph/graphviz.hpp>
 #endif
 
-#include <regex>
-#include <vector>
-#include <string>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <regex>
+#include <string>
+#include <vector>
 
 namespace cn
 {
@@ -42,7 +42,8 @@ graph::graph(std::vector<std::string_view> options)
   m_postStage = add_option("post");
   m_finishStage = add_option("finish");
 
-  for(const auto& opt : options) {
+  for (const auto& opt : options)
+  {
     add_option(opt);
   }
 }
@@ -50,14 +51,14 @@ graph::graph(std::vector<std::string_view> options)
 graph::node* graph::add_option(const std::string_view& opt)
 {
   // Look in the filesystem
-  if(auto file = read_config_file(opt))
+  if (auto file = read_config_file(opt))
   {
     return insert_content(opt, *std::move(file));
   }
 
   // Look into the cninja builtins
   const auto& bts = cn::builtins();
-  if(auto it = bts.find(opt); it != bts.end())
+  if (auto it = bts.find(opt); it != bts.end())
   {
     return insert_content(it->first, it->second);
   }
@@ -68,39 +69,31 @@ graph::node* graph::add_option(const std::string_view& opt)
 
 void graph::add_requirements(const std::string& name, const std::string& content)
 {
-  auto for_all_matches = [&] (const std::regex& rx, auto func)
-  {
+  auto for_all_matches = [&](const std::regex& rx, auto func) {
     using iterator = std::sregex_iterator;
-    std::for_each(iterator{content.begin(), content.end(), rx}, iterator{},
-                  [&] (auto& match) {
+    std::for_each(iterator{content.begin(), content.end(), rx}, iterator{}, [&](auto& match) {
       // Skip the first match - we only want the groups
       auto it = match.begin();
       ++it;
-      for(auto end = match.end(); it != end; ++it)
+      for (auto end = match.end(); it != end; ++it)
       {
         func(it->str());
       }
     });
   };
 
-  for_all_matches(
-        require_regex,
-        [&] (const std::string& str) {
+  for_all_matches(require_regex, [&](const std::string& str) {
     add_option(str);
     add_dependency(name, str);
   });
 
-  for_all_matches(
-        optional_regex,
-        [&] (const std::string& str) {
-    add_dependency(name, str);
-  });
+  for_all_matches(optional_regex, [&](const std::string& str) { add_dependency(name, str); });
 }
 
 void graph::add_dependency(const std::string& from, const std::string& to)
 {
   node* from_node{};
-  if(auto it = m_content.find(from); it != m_content.end())
+  if (auto it = m_content.find(from); it != m_content.end())
   {
     from_node = (*it).get();
   }
@@ -114,7 +107,7 @@ void graph::add_dependency(const std::string& from, const std::string& to)
   }
 
   node* to_node{};
-  if(auto it = m_content.find(to); it != m_content.end())
+  if (auto it = m_content.find(to); it != m_content.end())
   {
     to_node = (*it).get();
   }
@@ -130,15 +123,17 @@ void graph::add_dependency(const std::string& from, const std::string& to)
   boost::add_edge(m_index[from_node], m_index[to_node], m_graph);
 }
 
-std::pair<std::string, std::string> graph::split_name_and_argument(const std::string_view& input) noexcept
+std::pair<std::string, std::string>
+graph::split_name_and_argument(const std::string_view& input) noexcept
 {
   std::smatch match;
 
   // yay for regex not supporting string_view...
   std::string input_str{input};
 
-  if (std::regex_match(input_str, match, option_regex)) {
-    if(match.size() == 3)
+  if (std::regex_match(input_str, match, option_regex))
+  {
+    if (match.size() == 3)
     {
       return {match[1].str(), match[2].str()};
     }
@@ -153,16 +148,16 @@ graph::node* graph::insert_content(const std::string_view& key, std::string cont
 
   // Handle the foo=bar case
   auto [name, argument] = split_name_and_argument(key);
-      if(!argument.empty())
+  if (!argument.empty())
   {
     boost::replace_all(content, "%" + name + "%", argument);
   }
 
   // Note that we do not replace existing things, only placeholders.
   auto it = m_content.find(name);
-  if(it != m_content.end())
+  if (it != m_content.end())
   {
-    if((*it)->content.empty())
+    if ((*it)->content.empty())
     {
       inserted = (*it).get();
       (*it)->content = std::move(content);
@@ -192,7 +187,8 @@ graph::node* graph::insert_content(const std::string_view& key, std::string cont
 
 bool graph::is_fixed_stage(std::string_view name) noexcept
 {
-  static const constexpr std::array<std::string_view, 5> names{"start", "pre", "default", "post", "finish"};
+  static const constexpr std::array<std::string_view, 5> names{
+      "start", "pre", "default", "post", "finish"};
   return std::find(names.begin(), names.end(), name) != names.end();
 }
 
@@ -201,23 +197,23 @@ std::string graph::generate()
   std::stringstream result;
 
   // Clean the unused nodes
-  for(auto it = m_index.begin(); it != m_index.end(); )
+  for (auto it = m_index.begin(); it != m_index.end();)
   {
     const auto& node = *it->first;
-    if(is_fixed_stage(node.name))
+    if (is_fixed_stage(node.name))
     {
       ++it;
       continue;
     }
 
-    if(node.content.empty())
+    if (node.content.empty())
     {
       // Cleanup
       boost::clear_vertex(it->second, m_graph);
       boost::remove_vertex(it->second, m_graph);
 
       auto node_it = m_content.find(&node);
-      if(node_it != m_content.end())
+      if (node_it != m_content.end())
         m_content.erase(node_it);
 
       it = m_index.erase(it);
@@ -230,15 +226,16 @@ std::string graph::generate()
 
   auto default_index = m_index[m_defaultStage];
   auto post_index = m_index[m_postStage];
-  for(const auto& [node, index] : m_index)
+  for (const auto& [node, index] : m_index)
   {
-    if(node->name == "start")
+    if (node->name == "start")
       continue;
 
     // If no edges : put it after default
     auto [in_begin, in_end] = boost::in_edges(index, m_graph);
-        auto [out_begin, out_end] = boost::out_edges(index, m_graph);
-        if(in_begin == in_end && out_begin == out_end) {
+    auto [out_begin, out_end] = boost::out_edges(index, m_graph);
+    if (in_begin == in_end && out_begin == out_end)
+    {
       boost::add_edge(index, default_index, m_graph);
       boost::add_edge(post_index, index, m_graph);
     }
@@ -247,10 +244,10 @@ std::string graph::generate()
   std::vector<vertex_index_t> c;
   boost::topological_sort(m_graph, std::back_inserter(c));
 
-  for(auto vtx : c)
+  for (auto vtx : c)
   {
     node& node = *m_graph[vtx];
-    if(!node.content.empty())
+    if (!node.content.empty())
     {
       result << "# cninja:  " << node.name << "\n";
       result << "list(APPEND CNINJA_FEATURES \"" << node.name << "\")\n";

@@ -1,11 +1,10 @@
 #include "generate.hpp"
 
 #include <cn/config.hpp>
+#include <cn/fmt.hpp>
+#include <cn/graph.hpp>
 #include <cn/system.hpp>
 #include <cn/util.hpp>
-#include <cn/graph.hpp>
-#include <cn/fmt.hpp>
-
 
 namespace cn
 {
@@ -87,7 +86,6 @@ std::string generate_cmake_call(Options options)
   //    ;
   //  }
 
-
   //  if(options.warnings)
   //  {
   //    cflags +=
@@ -133,11 +131,10 @@ std::string generate_cmake_call(Options options)
   //    }
   //  }
 
-
   std::string cmd;
   cmd += "cmake .. -GNinja -Wno-dev -DCMAKE_TOOLCHAIN_FILE=cninja-toolchain.cmake ";
 
-  for(auto opt : options.cmake_options)
+  for (auto opt : options.cmake_options)
   {
     cmd += opt;
     cmd += ' ';
@@ -152,7 +149,7 @@ std::string generate_build_path(Options options)
   auto options_names = options.options;
   std::sort(options_names.begin(), options_names.end());
 
-  for(const auto& opt : options_names)
+  for (const auto& opt : options_names)
     p += fmt::format("{}-", opt);
 
   // Remove last dash character
