@@ -240,6 +240,12 @@ std::string graph::generate()
       boost::add_edge(post_index, index, m_graph);
     }
   }
+  using namespace boost;
+  auto index_map = get(vertex_index, m_graph);
+  std::size_t current_index = 0;
+
+  for(auto [vbegin, vend] = boost::vertices(m_graph); vbegin != vend; ++vbegin)
+      index_map[*vbegin]=current_index++;
 
   std::vector<vertex_index_t> c;
   boost::topological_sort(m_graph, std::back_inserter(c));
