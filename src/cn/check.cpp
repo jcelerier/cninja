@@ -173,12 +173,6 @@ bool check_environment() noexcept
     return false;
   }
 
-  if (!fs::exists("CMakeLists.txt") && !fs::exists("build.ninja"))
-  {
-    fmt::print("CMakeLists.txt not found. Run cninja from a CMake source or binary dir.\n");
-    return false;
-  }
-
   return true;
 }
 

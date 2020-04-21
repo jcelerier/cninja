@@ -12,7 +12,8 @@ namespace cn
 std::string generate_cmake_call(Options options)
 {
   std::string cmd;
-  cmd += "cmake .. -GNinja -Wno-dev -DCMAKE_TOOLCHAIN_FILE=cninja-toolchain.cmake ";
+  cmd += fmt::format("cmake {}", options.source_folder);
+  cmd += " -GNinja -Wno-dev -DCMAKE_TOOLCHAIN_FILE=cninja-toolchain.cmake ";
 
   for (auto opt : options.cmake_options)
   {

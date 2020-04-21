@@ -2,6 +2,7 @@
 
 #include <cn/builtins.hpp>
 #include <cn/fmt.hpp>
+#include <cn/fs.hpp>
 
 #include <sstream>
 
@@ -42,13 +43,18 @@ std::string options_text()
 Options parse_options(int argc, char** argv)
 {
   Options options{};
-  std::vector<std::string_view> arg_opts;
-  std::vector<std::string_view> arg_cmake;
+  std::optional<std::string_view> source_folder;
 
   bool cmake{};
   for (int it = 1; it < argc; ++it)
   {
     std::string_view arg(argv[it]);
+    if (!source_folder && fs::is_directory(arg))
+    {
+      source_folder = arg;
+      continue;
+    }
+
     if (arg == "--")
     {
       cmake = true;
@@ -61,26 +67,34 @@ Options parse_options(int argc, char** argv)
       options.cmake_options.push_back(arg);
   }
 
+  if(source_folder)
+    options.source_folder = fs::absolute(*source_folder);
+  else
+    options.source_folder = fs::absolute(".");
+
   if (std::find(options.options.begin(), options.options.end(), "help") != options.options.end())
   {
     fmt::print(
         R"_(cninja - an opinionated cmake frontend
-               Usage:
-               Invoke cninja with the default options:
-               $ cninja
+Usage:
+Invoke cninja with the default options:
+$ cninja
 
-               Invoke cninja with custom options:
-               $ cninja [OPTIONS...]
+Invoke cninja with custom options:
+$ cninja [OPTIONS...]
 
-               Invoke cninja with custom options, and pass some flags to CMake:
-               $ cninja [OPTIONS...] -- [CMake flags...]
+Invoke cninja with custom options outside of source tree:
+$ cninja ../some/source/folder [OPTIONS...]
 
-               Some options are built-in ; others can be added by putting files in .cninja folders
-               somewhere in your directory tree relative to this folder.
+Invoke cninja with custom options, and pass some flags to CMake:
+$ cninja [OPTIONS...] -- [CMake flags...]
 
-               Built-in options:
-               {}
-               )_",
+Some options are built-in ; others can be added by putting files in .cninja folders
+somewhere in your directory tree relative to this folder.
+
+Built-in options:
+{}
+)_",
         options_text());
     std::exit(0);
   }

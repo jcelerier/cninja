@@ -1,13 +1,14 @@
 #pragma once
 #include <string>
 #include <vector>
-
 #include <string_view>
+#include <optional>
 
 namespace cn
 {
 struct Options
 {
+  std::string source_folder;
   std::vector<std::string_view> options;
   std::vector<std::string_view> cmake_options;
 };
