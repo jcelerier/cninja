@@ -11,6 +11,7 @@ A project trying to set 22th century defaults to CMake calls, with a simplified 
 - Configures and builds in one glorious stroke.
 - Does not scream at you.
 - Does not try to install in global system folders - the `install` target will copy things in a `build/install` folder.
+- Looks for config files in `.cninja` folders - easily create custom configs for your projects. 
 
 ## Usage
 
