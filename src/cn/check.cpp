@@ -1,14 +1,16 @@
-#include "check.hpp"
+// Must be first in line because of
+// https://stackoverflow.com/questions/9750344/boostasio-winsock-and-winsock-2-compatibility-issue
 #define BOOST_ASIO_DISABLE_THREADS 1
 #define BOOST_ERROR_CODE_HEADER_ONLY 1
 #define BOOST_REGEX_NO_LIB 1
 #define BOOST_DATE_TIME_NO_LIB 1
 #define BOOST_SYSTEM_NO_LIB 1
+#include <boost/process.hpp>
 
+#include "check.hpp"
 #include <iostream>
 #include <sstream>
 #include <regex>
-#include <boost/process.hpp>
 namespace cn
 {
 namespace

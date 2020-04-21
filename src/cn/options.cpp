@@ -49,7 +49,7 @@ Options parse_options(int argc, char** argv)
   for (int it = 1; it < argc; ++it)
   {
     std::string_view arg(argv[it]);
-    if (!source_folder && fs::is_directory(arg))
+    if (!source_folder && fs::is_directory(std::string(arg)))
     {
       source_folder = arg;
       continue;
