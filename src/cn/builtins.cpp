@@ -4,13 +4,13 @@
 #include <cn/system.hpp>
 namespace cn
 {
-namespace 
+namespace
 {
 #if defined(_WIN32)
 std::string to_cmake_path(std::string input)
 {
-  for(char& c : input) 
-    if(c == '\\') 
+  for(char& c : input)
+    if(c == '\\')
       c = '/';
   return input;
 }
@@ -141,7 +141,7 @@ string(APPEND CMAKE_CXX_FLAGS_INIT " -g3")
     map["era"] =
         R"_(# Oldest compatible system. Example: era=winxp/win7/win10 (on Windows), era=10.14 (on macOS)
 if(APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "%era%")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "%era%" CACHE INTERNAL "")
 elseif(WIN32)
   string(TOUPPER "%era%" WIN32_WINNT_MACRO)
   string(APPEND CMAKE_C_FLAGS_INIT " -D_WIN32_WINNT_=${WIN32_WINNT_MACRO}")
