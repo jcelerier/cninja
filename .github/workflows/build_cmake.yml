@@ -49,7 +49,7 @@ jobs:
           echo "::add-path::$PWD/llvm-mingw/bin"
           choco install ninja
         else
-          brew install ninja
+          brew install ninja boost
         fi
       shell: bash
 
