@@ -12,7 +12,7 @@ jobs:
         config:
         - {
             name: "Windows",
-            artifact: "build/cninja-1.0.0-Windows.zip",
+            artifact: "build/cninja-*-Windows.zip",
             os: windows-latest,
             build_type: "Release",
             cxx: "../llvm-mingw/bin/clang++.exe",
@@ -20,7 +20,7 @@ jobs:
           }
         - {
             name: "Ubuntu",
-            artifact: "build/cninja-1.0.0-Linux.zip",
+            artifact: "build/cninja-*-Linux.zip",
             os: ubuntu-latest,
             build_type: "Release",
             cxx: "clang++-9",
@@ -28,7 +28,7 @@ jobs:
           }
         - {
             name: "macOS",
-            artifact: "build/cninja-1.0.0-Darwin.zip",
+            artifact: "build/cninja-*-Darwin.zip",
             os: macos-latest,
             build_type: "Release",
             cxx: "clang++",
@@ -42,7 +42,7 @@ jobs:
         
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt update
-          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 ninja-build
+          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 ninja-build libboost-dev
         elif [ "$RUNNER_OS" == "Windows" ]; then
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
