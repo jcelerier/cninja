@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 project(cninja LANGUAGES CXX VERSION 1.0.0)
 enable_testing()
 
+# Dependencies
+find_package(Boost REQUIRED)
+
 # Create target
 add_executable(cninja)
 
@@ -40,6 +43,11 @@ target_sources(cninja
 target_compile_features(cninja
   PRIVATE
     cxx_std_17
+)
+
+target_link_libraries(cninja
+  PRIVATE
+    Boost::Boost
 )
 
 # Install target
