@@ -1,13 +1,5 @@
-// Must be first in line because of
-// https://stackoverflow.com/questions/9750344/boostasio-winsock-and-winsock-2-compatibility-issue
-#define BOOST_ASIO_DISABLE_THREADS 1
-#define BOOST_ERROR_CODE_HEADER_ONLY 1
-#define BOOST_REGEX_NO_LIB 1
-#define BOOST_DATE_TIME_NO_LIB 1
-#define BOOST_SYSTEM_NO_LIB 1
-#include <boost/process.hpp>
-
 #include "check.hpp"
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <regex>
@@ -15,6 +7,11 @@ namespace cn
 {
 namespace
 {
+#if defined(_MSC_VER)
+#define popen _popen
+#define pclose _pclose
+#endif
+
 struct version_number {
   int major{};
   int minor{};
@@ -28,12 +25,14 @@ struct version_number {
       return lhs.minor <= rhs.minor;
   }
 };
+
 bool check_system_command(const std::string& command)
 {
-  namespace bp = boost::process;
   fmt::print("Checking: {}\n", command);
-  int res = bp::system(command.c_str(), bp::std_out > bp::null, bp::std_err > bp::null);
-  if(res != 0)
+
+  FILE* pipe = popen(command.c_str(), "r");
+
+  if(auto res = pclose(pipe); res != 0)
   {
     fmt::print("... error ! \n");
     return false;
@@ -47,7 +46,6 @@ bool check_system_command(const std::string& command)
 
 bool check_version(const std::string& command, std::optional<version_number> min_version = {})
 {
-  namespace bp = boost::process;
   auto path = get_executable_path(command);
   if (!path)
   {
@@ -60,22 +58,26 @@ bool check_version(const std::string& command, std::optional<version_number> min
   // Run the process and save its stdout
   std::vector<std::string> lines;
   {
-    bp::ipstream is;
     std::string line;
-    bp::child process = min_version
-        ? bp::child{*path, "--version", bp::std_out > is, bp::std_err > bp::null}
-        : bp::child{*path, "--version", bp::std_out > bp::null, bp::std_err > bp::null};
+    FILE* pipe = popen((command + " --version").c_str(), "r");
 
-    if (min_version)
     {
-      while (process.running() && std::getline(is, line) && !line.empty())
-        lines.push_back(line);
+      char* buffer = nullptr;
+      size_t size = 0;
+      ssize_t read_size = 0;
+
+      do {
+        read_size = ::getline(&buffer, &size, pipe);
+        lines.push_back(std::string(buffer));
+      } while(read_size > 0);
+
+      if(buffer)
+        ::free(buffer);
     }
-    process.wait();
 
-    if(process.exit_code() != 0)
+    if(int res = pclose(pipe); res != 0)
     {
-      fmt::print("... error ! \n");
+      fmt::print("... error 1 ! \n");
       return false;
     }
   }

@@ -68,7 +68,7 @@ Options parse_options(int argc, char** argv)
   }
 
   if(source_folder)
-    options.source_folder = fs::absolute(*source_folder);
+    options.source_folder = fs::absolute(std::string(*source_folder));
   else
     options.source_folder = fs::absolute(".");
 
