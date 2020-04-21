@@ -6,7 +6,7 @@ enable_testing()
 find_package(Boost REQUIRED)
 
 # Create target
-add_executable(cninja)
+add_executable(cninja src/main.cpp)
 
 target_include_directories(cninja
   PRIVATE
@@ -19,8 +19,6 @@ target_include_directories(cninja
 
 target_sources(cninja
   PRIVATE
-    src/main.cpp
-
     src/cn/builtins.hpp
     src/cn/check.hpp
     src/cn/config.hpp
