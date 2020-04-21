@@ -4,7 +4,20 @@
 #include <cn/system.hpp>
 namespace cn
 {
-
+namespace 
+{
+#if defined(_WIN32)
+std::string to_cmake_path(std::string input)
+{
+  for(char& c : input) 
+    if(c == '\\') 
+      c = '/';
+  return input;
+}
+#else
+#define to_cmake_path(str) str
+#endif
+}
 const builtin_map& builtins()
 {
   static const builtin_map map = [] {
@@ -48,8 +61,8 @@ set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_C_COMPILER {})
 set(CMAKE_CXX_COMPILER {})
 )_",
-        sys.clang_binary,
-        sys.clangpp_binary);
+        to_cmake_path(sys.clang_binary),
+        to_cmake_path(sys.clangpp_binary));
 
     map["libcxx"] =
         R"_(# Use Clang's libc++ as a standard library (default)
@@ -211,7 +224,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 if(APPLE)
   set(temp_LINKER_WARNINGS "-Wl,-fatal_warnings -Wl,-undefined,dynamic_lookup")
-else()
+elseif(NOT WIN32)
   set(temp_LINKER_WARNINGS
        "-Wl,-z,defs \
         -Wl,-z,now \
