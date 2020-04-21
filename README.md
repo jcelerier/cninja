@@ -23,11 +23,14 @@ The tool works by generating a CMake toolchain file from a list of features pass
     # Produces a release build with debug symbols in "build"
     $ cninja
 
-    # Produces a build in "build-static-thin-lto"
-    $ cninja static thin-lto
+    # Produces a build in "build-static-lto=thin"
+    $ cninja static lto=thin
 
     # Produces a build in "build-asan-ubsan-debugsyms-examples-tests"
     $ cninja asan ubsan debugsyms tests examples
+    
+    # Produces a build of the /foo/bar folder with some CMake flags
+    $ cninja /foo/bar asan ubsan debugsyms -- -DCMAKE_PREFIX_PATH=/path/to/somelib
 
 As an example, here is a comparison of the default set-up of `cninja` and the same build type for CMake on the [Strawberry](https://github.com/strawberrymusicplayer/strawberry) software : 
 
