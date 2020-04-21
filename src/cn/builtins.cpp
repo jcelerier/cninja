@@ -270,7 +270,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # We are in 2020
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 # If you CI run looks like
 # $ cmake --build .

@@ -1,21 +1,124 @@
 #include "check.hpp"
+#define BOOST_ASIO_DISABLE_THREADS 1
+#define BOOST_ERROR_CODE_HEADER_ONLY 1
+#define BOOST_REGEX_NO_LIB 1
+#define BOOST_DATE_TIME_NO_LIB 1
+#define BOOST_SYSTEM_NO_LIB 1
 
+#include <iostream>
+#include <sstream>
+#include <regex>
+#include <boost/process.hpp>
 namespace cn
 {
 namespace
 {
-bool check_command(const std::string& command)
+struct version_number {
+  int major{};
+  int minor{};
+
+  friend constexpr bool operator<=(version_number lhs, version_number rhs) noexcept {
+    if(lhs.major < rhs.major)
+      return true;
+    else if(lhs.major > rhs.major)
+      return false;
+    else
+      return lhs.minor <= rhs.minor;
+  }
+};
+bool check_system_command(const std::string& command)
 {
+  namespace bp = boost::process;
   fmt::print("Checking: {}\n", command);
-  int res = system(command.c_str());
-  fmt::print("\n");
-  return res == 0;
+  int res = bp::system(command.c_str(), bp::std_out > bp::null, bp::std_err > bp::null);
+  if(res != 0)
+  {
+    fmt::print("... error ! \n");
+    return false;
+  }
+  else
+  {
+    fmt::print("... ok ! \n");
+    return true;
+  }
+}
+
+bool check_version(const std::string& command, std::optional<version_number> min_version = {})
+{
+  namespace bp = boost::process;
+  auto path = get_executable_path(command);
+  if (!path)
+  {
+    fmt::print("... error ! \n");
+    return false;
+  }
+
+  fmt::print("Checking: {} --version\n", command);
+
+  // Run the process and save its stdout
+  std::vector<std::string> lines;
+  {
+    bp::ipstream is;
+    std::string line;
+    bp::child process = min_version
+        ? bp::child{*path, "--version", bp::std_out > is, bp::std_err > bp::null}
+        : bp::child{*path, "--version", bp::std_out > bp::null, bp::std_err > bp::null};
+
+    if (min_version)
+    {
+      while (process.running() && std::getline(is, line) && !line.empty())
+        lines.push_back(line);
+    }
+    process.wait();
+
+    if(process.exit_code() != 0)
+    {
+      fmt::print("... error ! \n");
+      return false;
+    }
+  }
+
+  if(min_version)
+  {
+    static const std::regex version_check{R"_(([0-9]+)\.([0-9]+))_"};
+
+    for(auto& line : lines)
+    {
+      std::smatch match;
+      if (std::regex_search(line, match, version_check))
+      {
+        if (match.size() == 3)
+        {
+          int major = std::stoi(match[1].str());
+          int minor = std::stoi(match[2].str());
+          if(*min_version <= version_number{major, minor})
+          {
+            fmt::print("... ok ! \n");
+            return true;
+          }
+          else
+          {
+            fmt::print("... version {}.{} too old ! \n", major, minor);
+            return false;
+          }
+        }
+      }
+    }
+
+    fmt::print("... no version number found, assuming it is enough ! \n");
+    return true;
+  }
+  else
+  {
+    fmt::print("... ok ! \n");
+    return true;
+  }
 }
 }
 
 bool check_environment() noexcept
 {
-  if (!check_command("cmake --version"))
+  if (!check_version("cmake", version_number{3, 12}))
   {
     fmt::print(
         "cmake not found. Please install cmake: \n"
@@ -23,7 +126,7 @@ bool check_environment() noexcept
     return false;
   }
 
-  if (!check_command("ninja --version"))
+  if (!check_version("ninja"))
   {
     fmt::print(
         "ninja not found. Please install ninja: \n"
@@ -42,7 +145,7 @@ bool check_environment() noexcept
 #endif
       ;
 
-  if (sys.clangpp_binary.empty() || !check_command(clang_test_command))
+  if (sys.clangpp_binary.empty() || !check_system_command(clang_test_command))
   {
     if constexpr (sys.os_linux)
     {

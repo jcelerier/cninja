@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.17)
 project(cninja LANGUAGES CXX VERSION 1.0.0)
 enable_testing()
 
@@ -6,7 +6,7 @@ enable_testing()
 find_package(Boost REQUIRED)
 
 # Create target
-add_executable(cninja src/main.cpp)
+add_executable(cninja)
 
 target_include_directories(cninja
   PRIVATE
@@ -19,6 +19,8 @@ target_include_directories(cninja
 
 target_sources(cninja
   PRIVATE
+    src/main.cpp
+
     src/cn/builtins.hpp
     src/cn/check.hpp
     src/cn/config.hpp
@@ -33,6 +35,7 @@ target_sources(cninja
     src/cn/builtins.cpp
     src/cn/check.cpp
     src/cn/config.cpp
+    src/cn/fs.cpp
     src/cn/generate.cpp
     src/cn/graph.cpp
     src/cn/options.cpp
@@ -45,7 +48,7 @@ target_compile_features(cninja
 
 target_link_libraries(cninja
   PRIVATE
-    Boost::Boost
+    Boost::boost
 )
 
 # Install target
