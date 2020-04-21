@@ -3,6 +3,8 @@
 
 A project trying to set 22th century defaults to CMake calls, with a simplified syntax for the most common needs during development and an emphasis on build speed.
 
+The tool works by generating a CMake toolchain file from a list of features passed in arguments, and running a `cmake ; cmake --build` cycle with that toolchain file. Requested features can have (acyclic) dependencies and will be ordered automatically if they do.
+
 ## Features
 
 - Uses Ninja, Clang everywhere, and if possible libc++ and lld.
