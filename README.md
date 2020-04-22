@@ -20,17 +20,27 @@ The tool works by generating a CMake toolchain file from a list of features pass
     $ git clone something
     $ cd something
 
-    # Produces a release build with debug symbols in "build"
+    ### Produces a release build with debug symbols in "build"
     $ cninja
 
-    # Produces a build in "build-static-lto=thin"
+    ### Produces a build in "build-static-lto=thin"
     $ cninja static lto=thin
 
-    # Produces a build in "build-asan-ubsan-debugsyms-examples-tests"
+    ### Produces a build in "build-asan-ubsan-debugsyms-examples-tests"
     $ cninja asan ubsan debugsyms tests examples
     
-    # Produces a build of the /foo/bar folder with some CMake flags
+    ### Produces a build of the /foo/bar folder with some CMake flags
     $ cninja /foo/bar asan ubsan debugsyms -- -DCMAKE_PREFIX_PATH=/path/to/somelib
+    
+    ### Custom configurations 
+    $ mkdir .cninja
+    $ echo 'string(APPEND CMAKE_CXX_FLAGS_INIT " -Weverything")' > .cninja/all_warnings.cmake
+    
+    $ mkdir $HOME/.cninja
+    $ echo 'set(CMAKE_PREFIX_PATH "/home/myself/Qt/5.15/gcc_64")' > $HOME/.cninja/my_qt.cmake
+    
+    $ cninja all_warnings my_qt
+    
 
 As an example, here is a comparison of the default set-up of `cninja` and the same build type for CMake on the [Strawberry](https://github.com/strawberrymusicplayer/strawberry) software : 
 
