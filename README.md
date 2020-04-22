@@ -17,10 +17,9 @@ The tool works by generating a CMake toolchain file from a list of features pass
 
 ## Usage
 
+    ### Produces a release build with debug symbols in "build"
     $ git clone something
     $ cd something
-
-    ### Produces a release build with debug symbols in "build"
     $ cninja
 
     ### Produces a build in "build-static-lto=thin"
