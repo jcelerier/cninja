@@ -64,6 +64,7 @@ jobs:
         else
           cmake ..
         fi
+      shell: bash
 
     - name: make
       run: cd build && cmake --build .
