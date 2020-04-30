@@ -103,7 +103,6 @@ set(FLAGS
   lto=thin
   asan ubsan tsan
   debugmode debugsyms
-  compiler=gcc
   compiler=clang
   libcxx
   plain
@@ -111,7 +110,16 @@ set(FLAGS
   warnings
   linkerwarnings
   visibility
-  static)
+  static
+)
+
+# No point in testing GCC outside of Linux
+if(UNIX AND NOT APPLE)
+  list(APPEND FLAGS
+    compiler=gcc
+  )
+endif()
+
 foreach(kind static shared executable)
   add_test(
     NAME ${kind}

@@ -13,7 +13,9 @@ if("lld" STREQUAL "${CNINJA_LINKER}")
   add_linker_flags(" -Wl,--icf=all")
 endif()
 
-add_linker_flags(" -Wl,-O3")
+if(NOT APPLE)
+  add_linker_flags(" -Wl,-O3")
+endif()
 
 if(NOT "debugsyms" IN_LIST CNINJA_FEATURES)
   add_linker_flags(" -Wl,--strip-all")
