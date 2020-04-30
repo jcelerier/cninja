@@ -26,7 +26,7 @@ namespace
 // cninja_require(this)
 static inline const std::regex require_regex{R"_(cninja_require\(([a-zA-Z0-9_=-]+)\))_"};
 
-// cninja_require(optional)
+// cninja_optional(that)
 static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_=-]+)\))_"};
 
 // foo_bar = 10.14
@@ -35,33 +35,70 @@ static inline const std::regex option_regex{R"_(([a-zA-Z0-9_-]+)\s*=\s*([a-zA-Z0
 
 graph::graph(std::vector<std::string_view> options)
 {
+  // Add the user options
+  for (const auto& opt : options)
+  {
+    add_option(opt);
+  }
+
   // Add the always-here things :
   m_startStage = add_option("start");
   m_preStage = add_option("pre");
   m_defaultStage = add_option("default");
   m_postStage = add_option("post");
   m_finishStage = add_option("finish");
-
-  for (const auto& opt : options)
-  {
-    add_option(opt);
-  }
 }
 
 graph::node* graph::add_option(const std::string_view& opt)
 {
   auto [name, argument] = split_name_and_argument(opt);
+
+  // Do nothing if we already found that option earlier.
+  // This is in particular done so that options passed on the command line
+  // override those in the built-ins.
+  if(auto it = m_handledOptions.find(name); it != m_handledOptions.end())
+    return it->second;
+
+  // If we have e.g. default=plain, the content of "default" will be what's in plain.cmake
+  // If plain.cmake is nowhere to be found, then "plain" will be passed as the %default% variable.
+
+  if(!argument.empty())
+  {
+    // Look for the argument in the filesystem
+    if (auto file = read_config_file(argument))
+    {
+      auto node = insert_content(name, argument, *std::move(file));
+      m_handledOptions[name] = node;
+      m_handledOptions[argument] = node;
+      return node;
+    }
+
+    // Look for the argument into the cninja builtins
+    const auto& bts = cn::builtins();
+    if (auto it = bts.find(argument); it != bts.end())
+    {
+      auto node = insert_content(name, argument, it->second);
+      m_handledOptions[name] = node;
+      m_handledOptions[argument] = node;
+      return node;
+    }
+  }
+
   // Look in the filesystem
   if (auto file = read_config_file(name))
   {
-    return insert_content(name, argument, *std::move(file));
+    auto node = insert_content(name, argument, *std::move(file));
+    m_handledOptions[name] = node;
+    return node;
   }
 
   // Look into the cninja builtins
   const auto& bts = cn::builtins();
   if (auto it = bts.find(name); it != bts.end())
   {
-    return insert_content(name, argument, it->second);
+    auto node = insert_content(name, argument, it->second);
+    m_handledOptions[name] = node;
+    return node;
   }
 
   // Fail
@@ -84,6 +121,7 @@ void graph::add_requirements(const std::string& name, const std::string& content
   };
 
   for_all_matches(require_regex, [&](const std::string& str) {
+    std::cerr << "Requireing : " << str << std::endl;
     add_option(str);
     add_dependency(name, str);
   });

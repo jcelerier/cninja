@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 project(cninja LANGUAGES CXX VERSION 2.0.0)
 enable_testing()
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 # Dependencies
 find_package(Boost REQUIRED)
 
@@ -39,6 +41,35 @@ target_sources(cninja
     src/cn/generate.cpp
     src/cn/graph.cpp
     src/cn/options.cpp
+
+    src/builtins/asan.cmake
+    src/builtins/clang.cmake
+    src/builtins/compiler.cmake
+    src/builtins/debugmode.cmake
+    src/builtins/debugsyms.cmake
+    src/builtins/default.cmake
+    src/builtins/era.cmake
+    src/builtins/examples.cmake
+    src/builtins/fast.cmake
+    src/builtins/finish.cmake
+    src/builtins/gcc.cmake
+    src/builtins/libcxx.cmake
+    src/builtins/linkerwarnings.cmake
+    src/builtins/lld.cmake
+    src/builtins/lto.cmake
+    src/builtins/no-examples.cmake
+    src/builtins/no-tests.cmake
+    src/builtins/plain.cmake
+    src/builtins/post.cmake
+    src/builtins/pre.cmake
+    src/builtins/small.cmake
+    src/builtins/start.cmake
+    src/builtins/static.cmake
+    src/builtins/tests.cmake
+    src/builtins/tsan.cmake
+    src/builtins/ubsan.cmake
+    src/builtins/visibility.cmake
+    src/builtins/warnings.cmake
 )
 
 target_compile_features(cninja
@@ -51,6 +82,9 @@ target_link_libraries(cninja
     Boost::boost
 )
 
+# Generate the builtins header
+include(cmake/generate-builtins.cmake)
+
 # Install target
 install(
   TARGETS
@@ -62,12 +96,30 @@ install(
 # Tests
 file(COPY tests DESTINATION .)
 
-set(FLAGS fast small lto=full lto=thin asan ubsan tsan debugmode debugsyms warnings gcc libcxx static examples tests)
+set(FLAGS
+  fast
+  small
+  lto=full
+  lto=thin
+  asan ubsan tsan
+  debugmode debugsyms
+  compiler=gcc
+  compiler=clang
+  libcxx
+  plain
+  lld
+  warnings
+  linkerwarnings
+  visibility
+  static)
 foreach(kind static shared executable)
   add_test(
     NAME ${kind}
     COMMAND cninja
     WORKING_DIRECTORY tests/${kind}
+  )
+  set_tests_properties(${kind} PROPERTIES
+    FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
   )
 
   foreach(flag ${FLAGS})
@@ -76,6 +128,9 @@ foreach(kind static shared executable)
       COMMAND cninja ${flag}
       WORKING_DIRECTORY tests/${kind}
     )
+    set_tests_properties(${kind}_${flag} PROPERTIES
+      FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
+    )
 
     foreach(flag2 ${FLAGS})
       if(NOT ${flag} STREQUAL ${flag2})
@@ -83,6 +138,9 @@ foreach(kind static shared executable)
           NAME ${kind}_${flag}_${flag2}
           COMMAND cninja ${flag} ${flag2}
           WORKING_DIRECTORY tests/${kind}
+        )
+        set_tests_properties(${kind}_${flag}_${flag2} PROPERTIES
+          FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
         )
       endif()
     endforeach()

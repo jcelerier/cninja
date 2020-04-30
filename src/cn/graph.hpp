@@ -90,5 +90,7 @@ private:
   graph_t m_graph;
   std::set<std::unique_ptr<node>, node::comparator> m_content;
   std::unordered_map<node*, void*> m_index;
+
+  std::map<std::string, node*> m_handledOptions;
 };
 }
