@@ -5,7 +5,12 @@ cninja_optional(asan)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 
-add_linker_flags(" -static-libgcc -static-libstdc++")
+if(APPLE)
+  add_linker_flags(" -static-libstdc++")
+else()
+  add_linker_flags(" -static-libgcc -static-libstdc++")
+endif()
+
 set(CMAKE_LINK_SEARCH_END_STATIC ON)
 
 if("${CNINJA_STDLIB}" STREQUAL "libcxx")
