@@ -69,10 +69,10 @@ jobs:
     - name: make
       run: cd build && cmake --build .
 
-    # - name: test
-    #   env:
-    #     CTEST_PARALLEL_LEVEL: 8
-    #   run: cd build && ctest -V
+    - name: test
+      env:
+        CTEST_PARALLEL_LEVEL: 8
+      run: cd build && ctest -V
 
     - name: deploy
       run: cd build && cmake --build . --target package
