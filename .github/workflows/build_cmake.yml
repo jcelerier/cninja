@@ -46,6 +46,8 @@ jobs:
         elif [ "$RUNNER_OS" == "Windows" ]; then
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
+          cmake -E tar x ninja.zip
+          echo "::add-path::$PWD"
           echo "::add-path::$PWD/llvm-mingw/bin"
           choco install ninja
         else
@@ -60,7 +62,7 @@ jobs:
       run: |
         mkdir build && cd build
         if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake -DCMAKE_PREFIX_PATH="C:/hostedtoolcache/windows/Boost/1.72.0" ..
+          cmake -GNinja -DCMAKE_PREFIX_PATH="C:/hostedtoolcache/windows/Boost/1.72.0" ..
         else
           cmake ..
         fi
