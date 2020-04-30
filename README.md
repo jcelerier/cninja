@@ -42,6 +42,9 @@ The tool works by generating a CMake toolchain file from a list of features pass
     
     $ cninja all_warnings my_qt asan
     
+    ### Don't set any of the default flags (i.e. use CMake defaults)
+    $ cninja plain
+    
 
 As an example, here is a comparison of the default set-up of `cninja` and the same build type for CMake on the [Strawberry](https://github.com/strawberrymusicplayer/strawberry) software : 
 
