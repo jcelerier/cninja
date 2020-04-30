@@ -121,7 +121,7 @@ void graph::add_requirements(const std::string& name, const std::string& content
   };
 
   for_all_matches(require_regex, [&](const std::string& str) {
-    std::cerr << "Requireing : " << str << std::endl;
+    std::cerr << "Requiring : " << str << std::endl;
     add_option(str);
     add_dependency(name, str);
   });
