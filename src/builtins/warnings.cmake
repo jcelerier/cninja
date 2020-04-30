@@ -1,5 +1,5 @@
 # Useful compiler warnings
-cninja_require(compiler=gcc)
+cninja_optional(compiler)
 
 set(temp_warnings
   -Wall

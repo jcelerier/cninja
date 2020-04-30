@@ -101,7 +101,6 @@ set(FLAGS
   small
   lto=full
   lto=thin
-  asan ubsan tsan
   debugmode debugsyms
   compiler=clang
   libcxx
@@ -120,6 +119,11 @@ if(UNIX AND NOT APPLE)
   )
 endif()
 
+if(NOT WIN32)
+  list(APPEND FLAGS
+    asan ubsan tsan
+  )
+endif()
 foreach(kind static shared executable)
   add_test(
     NAME ${kind}
