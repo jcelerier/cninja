@@ -9,6 +9,7 @@ cninja_optional(lld)
 string(APPEND CMAKE_C_FLAGS " -Ofast -march=native")
 string(APPEND CMAKE_CXX_FLAGS " -Ofast -march=native")
 
+# Identical code folding reduces size and improves performance
 if("lld" STREQUAL "${CNINJA_LINKER}")
   add_linker_flags(" -Wl,--icf=all")
 endif()
