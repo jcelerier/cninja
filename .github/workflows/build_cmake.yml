@@ -74,7 +74,14 @@ jobs:
     - name: test
       env:
         CTEST_PARALLEL_LEVEL: 8
-      run: cd build && ctest -V
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          export PATH=$PWD/llvm-mingw/bin:$PATH
+          cd build && ctest -V
+        else
+          cd build && ctest -V
+        fi
+      shell: bash
 
     - name: deploy
       run: cd build && cmake --build . --target package
