@@ -5,7 +5,7 @@ cninja_optional(lld)
 if(APPLE)
   set(temp_LINKER_WARNINGS "-Wl,-fatal_warnings -Wl,-undefined,dynamic_lookup")
 elseif(NOT WIN32)
-  if(("${CNINJA_LINKER}" STREQUAL "lld") OR ("${CNINJA_LINKER}" STREQUAL "gold"))
+  if((CNINJA_LINKER STREQUAL "lld") OR (CNINJA_LINKER STREQUAL "gold"))
     set(temp_LINKER_WARNINGS
          "-Wl,-z,defs \
 -Wl,-z,now \

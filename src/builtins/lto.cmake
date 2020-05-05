@@ -2,7 +2,7 @@
 cninja_optional(compiler)
 set(CNINJA_LTO_KIND "%lto%")
 
-if("clang" STREQUAL "${CNINJA_COMPILER}")
+if(CNINJA_COMPILER STREQUAL "clang")
   string(APPEND CMAKE_C_FLAGS_INIT " -flto=%lto%")
   string(APPEND CMAKE_CXX_FLAGS_INIT " -flto=%lto%")
 

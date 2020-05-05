@@ -13,7 +13,7 @@ endif()
 
 set(CMAKE_LINK_SEARCH_END_STATIC ON)
 
-if("${CNINJA_STDLIB}" STREQUAL "libcxx")
+if(CNINJA_STDLIB STREQUAL "libcxx")
   string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -lc++abi -pthread")
 endif()
 

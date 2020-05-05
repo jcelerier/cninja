@@ -2,7 +2,7 @@
 
 cninja_optional(compiler)
 
-if("${CNINJA_COMPILER}" STREQUAL "clang")
+if(CNINJA_COMPILER STREQUAL "clang")
   set(CNINJA_STDLIB libcxx)
 
   # It's the default everywhere but on Linux anyways

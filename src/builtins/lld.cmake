@@ -6,7 +6,7 @@ cninja_optional(lto)
 
 if(NOT APPLE)
   # GCC does not have robust support for that yet
-  if("${CNINJA_COMPILER}" STREQUAL clang)
+  if(CNINJA_COMPILER STREQUAL "clang")
     # LLD is a much faster linker : https://lld.llvm.org
     add_linker_flags(" -fuse-ld=lld")
     set(CNINJA_LINKER lld)
@@ -29,7 +29,7 @@ if(NOT APPLE)
   if(NOT WIN32 AND NOT APPLE)
     # Make linking faster
     # Except that gold segfaults with -flto and --threads...
-    if("${CNINJA_LINKER}" STREQUAL "lld" OR NOT ("lto" IN_LIST CNINJA_FEATURES))
+    if((CNINJA_LINKER STREQUAL "lld") OR NOT ("lto" IN_LIST CNINJA_FEATURES))
       add_linker_flags(" -Wl,--threads")
     endif()
 

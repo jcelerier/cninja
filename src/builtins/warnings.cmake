@@ -21,7 +21,7 @@ set(temp_warnings
   -Wno-unused-local-typedef
 )
 
-if("gcc" STREQUAL "${CNINJA_COMPILER}")
+if(CNINJA_COMPILER STREQUAL "gcc")
   list(APPEND temp_warnings
     -Wsuggest-final-types
     -Wsuggest-final-methods

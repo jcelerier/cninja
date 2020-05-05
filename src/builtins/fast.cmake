@@ -10,7 +10,7 @@ string(APPEND CMAKE_C_FLAGS " -Ofast -march=native")
 string(APPEND CMAKE_CXX_FLAGS " -Ofast -march=native")
 
 # Identical code folding reduces size and improves performance
-if("lld" STREQUAL "${CNINJA_LINKER}")
+if(CNINJA_LINKER STREQUAL "lld")
   add_linker_flags(" -Wl,--icf=all")
 endif()
 

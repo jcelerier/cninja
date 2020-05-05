@@ -6,7 +6,7 @@ cninja_optional(compiler)
 cninja_optional(lld)
 
 # Identical code folding reduces size and improves performance
-if("lld" STREQUAL "${CNINJA_LINKER}")
+if(CNINJA_LINKER STREQUAL "lld")
   add_linker_flags(" -Wl,--icf=all")
 endif()
 
