@@ -1,7 +1,7 @@
 cninja_require(pre)
 cninja_require(compiler=clang)
 cninja_require(lld)
-cninja_require(libcxx)
+# cninja_require(libcxx) - not useful as of now as linux distros default to libstdc++
 cninja_require(visibility)
 cninja_require(linkerwarnings)
 
