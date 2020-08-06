@@ -46,6 +46,7 @@ target_sources(cninja
     src/builtins/compiler.cmake
     src/builtins/debugmode.cmake
     src/builtins/debugsyms.cmake
+    src/builtins/debugsplit.cmake
     src/builtins/default.cmake
     src/builtins/era.cmake
     src/builtins/examples.cmake
