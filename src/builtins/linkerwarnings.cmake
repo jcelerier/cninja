@@ -8,6 +8,7 @@ cninja_optional(lld)
 if(NOT "asan" IN_LIST CNINJA_FEATURES)
   if(NOT "ubsan" IN_LIST CNINJA_FEATURES)
     if(APPLE)
+      # -Wl,-warn_weak_exports could also be useful
       set(temp_LINKER_WARNINGS "-Wl,-fatal_warnings -Wl,-undefined,dynamic_lookup")
     elseif(NOT WIN32)
       if((CNINJA_LINKER STREQUAL "lld") OR (CNINJA_LINKER STREQUAL "gold"))
