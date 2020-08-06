@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(cninja LANGUAGES CXX VERSION 3.0.0)
+project(cninja LANGUAGES CXX VERSION 3.1.0)
 enable_testing()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
