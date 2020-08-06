@@ -37,5 +37,4 @@ if(NOT APPLE)
     # Pro tip (Thanks Milian !): also add "set index-cache on" to your .gdbinit
     add_linker_flags(" -Wl,--gdb-index")
   endif()
-
 endif()

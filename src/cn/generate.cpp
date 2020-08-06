@@ -40,7 +40,25 @@ std::string generate_build_path(Options options)
 
 std::string generate_toolchain(Options options)
 {
-  return graph{options.options}.generate();
+  std::string toolchain_file;
+
+  // First write down the commands used
+  toolchain_file += "#cninja-options: ";
+  for(auto& opt : options.options)
+  {
+    toolchain_file += opt;
+    toolchain_file += " ";
+  }
+
+  // Then write down the cmake call used if any
+  toolchain_file += "\n#cninja-cmake-invocation: ";
+  toolchain_file += generate_cmake_call(options);
+  toolchain_file += "\n";
+
+  // Append the toolchain content
+  toolchain_file += graph{options.options}.generate();
+
+  return toolchain_file;
 }
 
 }
