@@ -62,7 +62,7 @@ jobs:
       run: |
         mkdir build && cd build
         if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake -GNinja -DCMAKE_PREFIX_PATH="C:/hostedtoolcache/windows/Boost/1.72.0" ..
+          cmake -GNinja -DBOOST_ROOT="$BOOST_ROOT" ..
         else
           cmake ..
         fi
