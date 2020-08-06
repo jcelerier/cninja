@@ -108,16 +108,39 @@ graph::node* graph::add_option(const std::string_view& opt)
 void graph::add_requirements(const std::string& name, const std::string& content)
 {
   auto for_all_matches = [&](const std::regex& rx, auto func) {
-    using iterator = std::sregex_iterator;
-    std::for_each(iterator{content.begin(), content.end(), rx}, iterator{}, [&](auto& match) {
-      // Skip the first match - we only want the groups
+    using iterator = std::cregex_iterator;
+
+    for(iterator match_it{content.data(), content.data() + content.size(), rx}; match_it != iterator{}; ++match_it) {
+      const auto& match = *match_it;
+
       auto it = match.begin();
+      // Check if we aren't in a comment
+      if (it->first != content.data())
+      {
+        const char* cur_char_it = it->first;
+
+        bool in_a_comment = false;
+        while(*cur_char_it != '\n' && cur_char_it != content.data())
+        {
+          if(*cur_char_it == '#')
+          {
+            in_a_comment = true;
+            break;
+          }
+          cur_char_it--;
+        }
+
+        if(in_a_comment)
+          break;
+      }
+
+      // Skip the first match - we only want the groups
       ++it;
       for (auto end = match.end(); it != end; ++it)
       {
         func(it->str());
       }
-    });
+    }
   };
 
   for_all_matches(require_regex, [&](const std::string& str) {
@@ -125,7 +148,9 @@ void graph::add_requirements(const std::string& name, const std::string& content
     add_dependency(name, str);
   });
 
-  for_all_matches(optional_regex, [&](const std::string& str) { add_dependency(name, str); });
+  for_all_matches(optional_regex, [&](const std::string& str) {
+    add_dependency(name, str);
+  });
 }
 
 void graph::add_dependency(const std::string& from, const std::string& to)
