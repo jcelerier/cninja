@@ -62,10 +62,7 @@ jobs:
       run: |
         mkdir build && cd build
         if [ "$RUNNER_OS" == "Windows" ]; then
-          echo "BOOST_ROOT: $BOOST_ROOT"
-          echo "BOOST_ROOT_1_72_0: $BOOST_ROOT_1_72_0"
-          exit 1
-          cmake -GNinja -DBOOST_ROOT="$BOOST_ROOT" ..
+          cmake -GNinja -DBOOST_ROOT="$BOOST_ROOT_1_72_0" ..
         else
           cmake ..
         fi
