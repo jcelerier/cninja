@@ -1,5 +1,6 @@
 # Enable UndefinedBehaviourSanitizer
 cninja_optional(compiler)
+
 string(APPEND CMAKE_C_FLAGS_INIT " -fsanitize=undefined")
 string(APPEND CMAKE_CXX_FLAGS_INIT " -fsanitize=undefined")
 add_linker_flags(" -fsanitize=undefined")

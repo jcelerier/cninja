@@ -1,4 +1,5 @@
 # Use clang as a compiler (default)
+cninja_require(pre)
 set(CNINJA_COMPILER clang)
 
 find_program(CMAKE_C_COMPILER NAMES

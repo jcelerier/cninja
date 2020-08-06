@@ -1,4 +1,5 @@
 # Use gcc as a compiler
+cninja_require(pre)
 set(CNINJA_COMPILER gcc)
 
 find_program(CMAKE_C_COMPILER NAMES

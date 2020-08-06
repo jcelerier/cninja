@@ -1,5 +1,7 @@
 # Enable ThreadSanitizer. Incompatible with asan / ubsan.
 cninja_optional(asan)
+cninja_optional(compiler)
+
 if(NOT "asan" IN_LIST CNINJA_FEATURES)
   string(APPEND CMAKE_C_FLAGS_INIT " -fsanitize=thread")
   string(APPEND CMAKE_CXX_FLAGS_INIT " -fsanitize=thread")
