@@ -14,7 +14,6 @@ if(NOT "asan" IN_LIST CNINJA_FEATURES)
       if((CNINJA_LINKER STREQUAL "lld") OR (CNINJA_LINKER STREQUAL "gold"))
         set(temp_LINKER_WARNINGS
              "-Wl,-z,defs \
-    -Wl,-z,now \
     -Wl,--unresolved-symbols,report-all \
     -Wl,--no-undefined \
     -Wl,--no-allow-shlib-undefined \

@@ -3,12 +3,12 @@ cninja_require(compiler=clang)
 cninja_require(lld)
 # cninja_require(libcxx) - not useful as of now as linux distros default to libstdc++
 cninja_require(visibility)
+cninja_require(linker)
 cninja_require(linkerwarnings)
 
 # -pipe: Potentially makes the build faster
-# -ffunction-sections, etc... : Allows to discard unused code more easily with --gc-sections
-string(APPEND CMAKE_C_FLAGS_INIT " -pipe -ffunction-sections -fdata-sections")
-string(APPEND CMAKE_CXX_FLAGS_INIT " -pipe -ffunction-sections -fdata-sections")
+string(APPEND CMAKE_C_FLAGS_INIT " -pipe")
+string(APPEND CMAKE_CXX_FLAGS_INIT " -pipe")
 
 if(WIN32)
   # Remove obnoxious default <windows.h> features
