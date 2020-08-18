@@ -44,9 +44,9 @@ fs::path get_home_folder()
 }
 }
 
-std::optional<std::string> read_config_file(const std::string& name)
+std::optional<std::string> read_config_file(const std::string& name, const std::string& source_dir)
 {
-  auto cur_path = fs::current_path();
+  fs::path cur_path = source_dir;
   const std::string full_name = name + ".cmake";
 
   // First check the arborescence going from the current folder to the root.

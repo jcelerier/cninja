@@ -56,7 +56,7 @@ std::string generate_toolchain(Options options)
   toolchain_file += "\n";
 
   // Append the toolchain content
-  toolchain_file += graph{options.options}.generate();
+  toolchain_file += Graph{options}.generate();
 
   return toolchain_file;
 }

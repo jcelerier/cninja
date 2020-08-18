@@ -9,11 +9,12 @@
 
 namespace cn
 {
-class graph
+struct Options;
+class Graph
 {
 public:
   // Pass a list of options, {"asan", "era=10.14", ...}
-  graph(std::vector<std::string_view> options);
+  explicit Graph(const Options& options);
 
   // Get a toolchain file in return
   std::string generate();
@@ -80,6 +81,8 @@ private:
   split_name_and_argument(const std::string_view& input) noexcept;
   node* insert_content(std::string_view name, std::string_view argument, std::string content);
   static bool is_fixed_stage(std::string_view name) noexcept;
+
+  const Options& m_options;
 
   node* m_startStage{};
   node* m_preStage{};

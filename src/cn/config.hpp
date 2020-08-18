@@ -5,5 +5,5 @@
 
 namespace cn
 {
-std::optional<std::string> read_config_file(const std::string& name);
+std::optional<std::string> read_config_file(const std::string& name, const std::string& source_dir);
 }

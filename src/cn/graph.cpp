@@ -7,6 +7,7 @@
 
 #include <cn/builtins.hpp>
 #include <cn/config.hpp>
+#include <cn/options.hpp>
 #include <cn/fmt.hpp>
 #if defined(CNINJA_DEBUG_GRAPH)
 #include <boost/graph/graphviz.hpp>
@@ -33,13 +34,12 @@ static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_=
 static inline const std::regex option_regex{R"_(([a-zA-Z0-9_-]+)\s*=\s*([a-zA-Z0-9_.-]+))_"};
 }
 
-graph::graph(std::vector<std::string_view> options)
+Graph::Graph(const Options& options)
+  : m_options{options}
 {
   // Add the user options
-  for (const auto& opt : options)
-  {
+  for (const auto& opt : options.options)
     add_option(opt);
-  }
 
   // Add the always-here things :
   m_startStage = add_option("start");
@@ -49,7 +49,7 @@ graph::graph(std::vector<std::string_view> options)
   m_finishStage = add_option("finish");
 }
 
-graph::node* graph::add_option(const std::string_view& opt)
+Graph::node* Graph::add_option(const std::string_view& opt)
 {
   auto [name, argument] = split_name_and_argument(opt);
 
@@ -65,7 +65,7 @@ graph::node* graph::add_option(const std::string_view& opt)
   if(!argument.empty())
   {
     // Look for the argument in the filesystem
-    if (auto file = read_config_file(argument))
+    if (auto file = read_config_file(argument, m_options.source_folder))
     {
       auto node = insert_content(name, argument, *std::move(file));
       m_handledOptions[name] = node;
@@ -85,7 +85,7 @@ graph::node* graph::add_option(const std::string_view& opt)
   }
 
   // Look in the filesystem
-  if (auto file = read_config_file(name))
+  if (auto file = read_config_file(name, m_options.source_folder))
   {
     auto node = insert_content(name, argument, *std::move(file));
     m_handledOptions[name] = node;
@@ -105,7 +105,7 @@ graph::node* graph::add_option(const std::string_view& opt)
   throw std::runtime_error(fmt::format("option {} not found.\n", opt));
 }
 
-void graph::add_requirements(const std::string& name, const std::string& content)
+void Graph::add_requirements(const std::string& name, const std::string& content)
 {
   auto for_all_matches = [&](const std::regex& rx, auto func) {
     using iterator = std::cregex_iterator;
@@ -153,7 +153,7 @@ void graph::add_requirements(const std::string& name, const std::string& content
   });
 }
 
-void graph::add_dependency(const std::string& from, const std::string& to)
+void Graph::add_dependency(const std::string& from, const std::string& to)
 {
   node* from_node{};
   if (auto it = m_content.find(from); it != m_content.end())
@@ -187,7 +187,7 @@ void graph::add_dependency(const std::string& from, const std::string& to)
 }
 
 std::pair<std::string, std::string>
-graph::split_name_and_argument(const std::string_view& input) noexcept
+Graph::split_name_and_argument(const std::string_view& input) noexcept
 {
   std::smatch match;
 
@@ -205,7 +205,7 @@ graph::split_name_and_argument(const std::string_view& input) noexcept
   return {input_str, {}};
 }
 
-graph::node* graph::insert_content(std::string_view name, std::string_view argument, std::string content)
+Graph::node* Graph::insert_content(std::string_view name, std::string_view argument, std::string content)
 {
   node* inserted{};
 
@@ -247,14 +247,14 @@ graph::node* graph::insert_content(std::string_view name, std::string_view argum
   return inserted;
 }
 
-bool graph::is_fixed_stage(std::string_view name) noexcept
+bool Graph::is_fixed_stage(std::string_view name) noexcept
 {
   static const constexpr std::array<std::string_view, 5> names{
       "start", "pre", "default", "post", "finish"};
   return std::find(names.begin(), names.end(), name) != names.end();
 }
 
-std::string graph::generate()
+std::string Graph::generate()
 {
   std::stringstream result;
 
