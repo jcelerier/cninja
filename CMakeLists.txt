@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(cninja
   LANGUAGES CXX
-  VERSION 3.4.0
+  VERSION 3.5.0
   HOMEPAGE_URL "https://github.com/jcelerier/cninja"
   DESCRIPTION "Opinionated CMake config manager"
 )
