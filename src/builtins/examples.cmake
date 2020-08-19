@@ -1,2 +1,2 @@
 # Build examples (if any)
-set(BUILD_EXAMPLES ON)
+set_cache(BUILD_EXAMPLES ON)

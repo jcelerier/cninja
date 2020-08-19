@@ -1,3 +1,3 @@
 # Don't build examples
-set(BUILD_EXAMPLE OFF)
-set(BUILD_EXAMPLES OFF)
+set_cache(BUILD_EXAMPLE OFF)
+set_cache(BUILD_EXAMPLES OFF)

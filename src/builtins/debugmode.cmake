@@ -1,7 +1,7 @@
 # Enable runtime debug checking (e.g. iterator validity checkers)
 cninja_optional(libcxx)
 
-set(CMAKE_BUILD_TYPE Debug)
+set_cache(CMAKE_BUILD_TYPE Debug)
 
 if(libcxx IN_LIST CNINJA_FEATURES)
   # See https://libcxx.llvm.org/docs/DesignDocs/DebugMode.html

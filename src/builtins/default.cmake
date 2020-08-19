@@ -20,19 +20,19 @@ if(WIN32)
 endif()
 
 # Don't try to install in protected directories by default
-set(CMAKE_INSTALL_PREFIX install)
+set_cache(CMAKE_INSTALL_PREFIX install)
 
 # Some libraries expect -fPIC
-set(CMAKE_POSITION_INDEPENDENT_CODE 1)
+set_cache(CMAKE_POSITION_INDEPENDENT_CODE 1)
 
 # Useful for running various tools, integrations in IDEs...
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set_cache(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # We are in 2020
-set(CMAKE_CXX_STANDARD 17)
+set_cache(CMAKE_CXX_STANDARD 17)
 
 # If you CI run looks like
 # $ cmake --build .
 # $ cmake --build . --target install
 # this will make it faster:
-set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY 1)
+set_cache(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY 1)

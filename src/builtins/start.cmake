@@ -9,3 +9,7 @@ macro(add_linker_flags)
   string(APPEND CMAKE_SHARED_LINKER_FLAGS_INIT ${ARGV})
   string(APPEND CMAKE_MODULE_LINKER_FLAGS_INIT ${ARGV})
 endmacro()
+
+macro(set_cache)
+  set(${ARGV0} ${ARGV1} CACHE INTERNAL "")
+endmacro()
