@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
-project(cninja LANGUAGES CXX VERSION 3.3.0)
+project(cninja
+  LANGUAGES CXX
+  VERSION 3.4.0
+  HOMEPAGE_URL "https://github.com/jcelerier/cninja"
+  DESCRIPTION "Opinionated CMake config manager"
+)
+
 enable_testing()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -45,15 +51,17 @@ target_sources(cninja
     src/builtins/clang.cmake
     src/builtins/compiler.cmake
     src/builtins/debugmode.cmake
-    src/builtins/debugsyms.cmake
     src/builtins/debugsplit.cmake
+    src/builtins/debugsyms.cmake
     src/builtins/default.cmake
+    src/builtins/earlybinding.cmake
     src/builtins/era.cmake
     src/builtins/examples.cmake
     src/builtins/fast.cmake
     src/builtins/finish.cmake
     src/builtins/gcc.cmake
     src/builtins/libcxx.cmake
+    src/builtins/linker.cmake
     src/builtins/linkerwarnings.cmake
     src/builtins/lld.cmake
     src/builtins/lto.cmake
