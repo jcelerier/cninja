@@ -118,8 +118,9 @@ jobs:
       run: |      
         # Deploy source archive too
         if [  ${{ matrix.config.name }} == 'Tarball' ]; then
-          find . -name .git -exec rm -rf {} \;
-          find . -name .git -exec rm -rf {} \;
+          find . -name .git -exec rm -rf {} \; || true
+          find . -name .git -exec rm -rf {} \; || true
+          
           tar caf cninja-${{ steps.get_version.outputs.version }}-src.tar.gz \
             3rdparty src tests configs \
             CMakeLists.txt LICENSE.md README.md
