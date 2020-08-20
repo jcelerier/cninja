@@ -12,32 +12,34 @@ jobs:
         config:
         - {
             name: "Windows",
-            artifact: "build/cninja-*-Windows.zip",
             os: windows-latest,
-            build_type: "Release",
             cxx: "../llvm-mingw/bin/clang++.exe",
             cxxflags: "",
-            asset_name: cninja-${{ steps.get_version.outputs.version }}-Windows.zip,
+            asset_name: "cninja-*-Windows.zip",
             release_flags: "era=win7 static lto=full small"
           }
         - {
             name: "Ubuntu",
-            artifact: "build/cninja-*-Linux.zip",
             os: ubuntu-latest,
-            build_type: "Release",
             cxx: "clang++-9",
             cxxflags: "-stdlib=libc++",
-            asset_name: cninja-${{ steps.get_version.outputs.version }}-Linux.zip,
+            asset_name: "cninja-*-Linux.tar.gz",
+            release_flags: "static lto=full small"
+          }
+        - {
+            name: "Tarball",
+            os: ubuntu-latest,
+            cxx: "clang++-9",
+            cxxflags: "-stdlib=libc++",
+            asset_name: "cninja-*-Linux.tar.gz",
             release_flags: "static lto=full small"
           }
         - {
             name: "macOS",
-            artifact: "build/cninja-*-Darwin.zip",
             os: macos-latest,
-            build_type: "Release",
             cxx: "clang++",
             cxxflags: "",
-            asset_name: cninja-${{ steps.get_version.outputs.version }}-macOS.zip,
+            asset_name: "cninja-*-macOS.tar.gz",
             release_flags: "era=10.11 static lto=full small"
           }
     steps:
@@ -48,6 +50,7 @@ jobs:
       uses: battila7/get-version-action@v2
 
     - name: Install dependencies
+      if: matrix.config.name != "Tarball"
       run:  |
         git submodule update --init --recursive
         
@@ -67,6 +70,7 @@ jobs:
       shell: bash
 
     - name: Configure
+      if: matrix.config.name != "Tarball"
       env:
         CXXFLAGS: ${{ matrix.config.cxxflags }}
         CXX: ${{ matrix.config.cxx }}
@@ -80,18 +84,23 @@ jobs:
       shell: bash
 
     - name: Build
+      if: matrix.config.name != "Tarball"
       run: cd build && cmake --build .
 
     - name: Test
+      if: matrix.config.name != "Tarball"
       run: |
         if [ "$RUNNER_OS" != "Windows" ]; then
           cd build && ctest -V
         fi
       shell: bash
 
-    - name: Deploy
-      run: |      
-        build/cninja  ${{ matrix.config.release_flags }} 
+    - name: Deploy binaries
+      if: matrix.config.name != "Tarball"
+      run: |
+        export ROOT_PATH=$PWD
+
+        build/cninja ${{ matrix.config.release_flags }} 
 
         cd build-*
         cmake --build . --target install
@@ -102,12 +111,29 @@ jobs:
         else
           tar -czf ${{ matrix.config.asset_name }} cninja
         fi
+        mv ${{ matrix.config.asset_name }} $ROOT_PATH/
+        
+    - name: Deploy source tarball
+      if: matrix.config.name == "Tarball"
+      run: |      
+        # Deploy source archive too
+        if [  ${{ matrix.config.name }} == "Tarball" ]; then
+          find . -name .git -exec rm -rf {} \;
+          find . -name .git -exec rm -rf {} \;
+          tar caf cninja-${{ steps.get_version.outputs.version }}-src.tar.gz \
+            3rdparty src tests configs \
+            CMakeLists.txt LICENSE.md README.md
+          
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import -
+          gpg -ab cninja-${{ steps.get_version.outputs.version }}-src.tar.gz
+        fi
 
     - name: Upload
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/${{ matrix.artifact_name }}
-        asset_name: ${{ matrix.asset_name }}
+        file: cninja-*
         tag: ${{ github.ref }}
+        overwrite: true
+        file_glob: true
 
