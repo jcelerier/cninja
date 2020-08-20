@@ -27,7 +27,7 @@ jobs:
             release_flags: "static lto=full small"
           }
         - {
-            name: "Tarball",
+            name: 'Tarball',
             os: ubuntu-latest,
             cxx: "clang++-9",
             cxxflags: "-stdlib=libc++",
@@ -50,7 +50,7 @@ jobs:
       uses: battila7/get-version-action@v2
 
     - name: Install dependencies
-      if: matrix.config.name != "Tarball"
+      if: matrix.config.name != 'Tarball'
       run:  |
         git submodule update --init --recursive
         
@@ -70,7 +70,7 @@ jobs:
       shell: bash
 
     - name: Configure
-      if: matrix.config.name != "Tarball"
+      if: matrix.config.name != 'Tarball'
       env:
         CXXFLAGS: ${{ matrix.config.cxxflags }}
         CXX: ${{ matrix.config.cxx }}
@@ -84,11 +84,11 @@ jobs:
       shell: bash
 
     - name: Build
-      if: matrix.config.name != "Tarball"
+      if: matrix.config.name != 'Tarball'
       run: cd build && cmake --build .
 
     - name: Test
-      if: matrix.config.name != "Tarball"
+      if: matrix.config.name != 'Tarball'
       run: |
         if [ "$RUNNER_OS" != "Windows" ]; then
           cd build && ctest -V
@@ -96,7 +96,7 @@ jobs:
       shell: bash
 
     - name: Deploy binaries
-      if: matrix.config.name != "Tarball"
+      if: matrix.config.name != 'Tarball'
       run: |
         export ROOT_PATH=$PWD
 
@@ -114,10 +114,10 @@ jobs:
         mv ${{ matrix.config.asset_name }} $ROOT_PATH/
         
     - name: Deploy source tarball
-      if: matrix.config.name == "Tarball"
+      if: matrix.config.name == 'Tarball'
       run: |      
         # Deploy source archive too
-        if [  ${{ matrix.config.name }} == "Tarball" ]; then
+        if [  ${{ matrix.config.name }} == 'Tarball' ]; then
           find . -name .git -exec rm -rf {} \;
           find . -name .git -exec rm -rf {} \;
           tar caf cninja-${{ steps.get_version.outputs.version }}-src.tar.gz \
