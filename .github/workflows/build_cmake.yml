@@ -16,7 +16,9 @@ jobs:
             os: windows-latest,
             build_type: "Release",
             cxx: "../llvm-mingw/bin/clang++.exe",
-            cxxflags: ""
+            cxxflags: "",
+            asset_name: cninja-${{ steps.get_version.outputs.version }}-Windows.zip,
+            release_flags: "era=win7 static lto=full small"
           }
         - {
             name: "Ubuntu",
@@ -24,7 +26,9 @@ jobs:
             os: ubuntu-latest,
             build_type: "Release",
             cxx: "clang++-9",
-            cxxflags: "-stdlib=libc++"
+            cxxflags: "-stdlib=libc++",
+            asset_name: cninja-${{ steps.get_version.outputs.version }}-Linux.zip,
+            release_flags: "static lto=full small"
           }
         - {
             name: "macOS",
@@ -32,11 +36,18 @@ jobs:
             os: macos-latest,
             build_type: "Release",
             cxx: "clang++",
-            cxxflags: ""
+            cxxflags: "",
+            asset_name: cninja-${{ steps.get_version.outputs.version }}-macOS.zip,
+            release_flags: "era=10.11 static lto=full small"
           }
     steps:
     - uses: actions/checkout@v2
-    - name: deps
+    
+    - name: Get latest release version number
+      id: get_version
+      uses: battila7/get-version-action@v2
+
+    - name: Install dependencies
       run:  |
         git submodule update --init --recursive
         
@@ -55,7 +66,7 @@ jobs:
         fi
       shell: bash
 
-    - name: configure
+    - name: Configure
       env:
         CXXFLAGS: ${{ matrix.config.cxxflags }}
         CXX: ${{ matrix.config.cxx }}
@@ -68,15 +79,35 @@ jobs:
         fi
       shell: bash
 
-    - name: make
+    - name: Build
       run: cd build && cmake --build .
 
-    - name: test
+    - name: Test
       run: |
         if [ "$RUNNER_OS" != "Windows" ]; then
           cd build && ctest -V
         fi
       shell: bash
 
-    - name: deploy
-      run: cd build && cmake --build . --target package
+    - name: Deploy
+      run: |      
+        build/cninja  ${{ matrix.config.release_flags }} 
+
+        cd build-*
+        cmake --build . --target install
+        cd install/bin
+
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          zip ${{ matrix.config.asset_name }} cninja.exe
+        else
+          tar -czf ${{ matrix.config.asset_name }} cninja
+        fi
+
+    - name: Upload
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/${{ matrix.artifact_name }}
+        asset_name: ${{ matrix.asset_name }}
+        tag: ${{ github.ref }}
+
