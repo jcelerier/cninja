@@ -15,7 +15,7 @@ jobs:
             os: windows-latest,
             cxx: "../llvm-mingw/bin/clang++.exe",
             cxxflags: "",
-            release_flags: "era=win7 static lto=full small -- -DBOOST_ROOT=$BOOST_ROOT_1_72_0"
+            release_flags: "era=win7 static lto=full small"
           }
         - {
             name: "Ubuntu",
@@ -96,15 +96,19 @@ jobs:
       if: matrix.config.name != 'Tarball'
       run: |
         export ROOT_PATH=$PWD
-
+        
+        export CNINJA_FLAGS=${{ matrix.config.release_flags }}
+        
         # Of course Windows requires DLLs to be copied...
         if [ "$RUNNER_OS" == "Windows" ]; then
           cp $PWD/llvm-mingw/bin/libc++.dll build/
           cp $PWD/llvm-mingw/bin/libunwind.dll build/
           export PATH="$PWD/llvm-mingw/bin:$PATH"
+          
+          export CNINJA_FLAGS="$CNINJA_FLAGS  -- -DBOOST_ROOT=$BOOST_ROOT_1_72_0"
         fi
         
-        build/cninja ${{ matrix.config.release_flags }} 
+        build/cninja $CNINJA_FLAGS
 
         cd build-*
         cmake --build . --target install
