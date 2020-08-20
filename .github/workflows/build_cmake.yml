@@ -113,7 +113,7 @@ jobs:
         export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
 
         if [ "$RUNNER_OS" == "Windows" ]; then
-          zip "cninja-$VERSION-$RUNNER_OS.zip" cninja.exe
+          "/c/Program Files/7-Zip/7z.exe" a cninja-$VERSION-$RUNNER_OS.zip" cninja.exe
         else
           tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja
         fi
