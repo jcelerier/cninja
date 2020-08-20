@@ -15,7 +15,6 @@ jobs:
             os: windows-latest,
             cxx: "../llvm-mingw/bin/clang++.exe",
             cxxflags: "",
-            asset_name: "cninja-*-Windows.zip",
             release_flags: "era=win7 static lto=full small"
           }
         - {
@@ -23,7 +22,6 @@ jobs:
             os: ubuntu-latest,
             cxx: "clang++-9",
             cxxflags: "-stdlib=libc++",
-            asset_name: "cninja-*-Linux.tar.gz",
             release_flags: "static lto=full small"
           }
         - {
@@ -31,7 +29,6 @@ jobs:
             os: ubuntu-latest,
             cxx: "clang++-9",
             cxxflags: "-stdlib=libc++",
-            asset_name: "cninja-*-Linux.tar.gz",
             release_flags: "static lto=full small"
           }
         - {
@@ -39,7 +36,6 @@ jobs:
             os: macos-latest,
             cxx: "clang++",
             cxxflags: "",
-            asset_name: "cninja-*-macOS.tar.gz",
             release_flags: "era=10.11 static lto=full small"
           }
     steps:
@@ -106,23 +102,26 @@ jobs:
         cmake --build . --target install
         cd install/bin
 
+        export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
+
         if [ "$RUNNER_OS" == "Windows" ]; then
-          zip ${{ matrix.config.asset_name }} cninja.exe
+          zip "cninja-$VERSION-$RUNNER_OS.zip" cninja.exe
         else
-          tar -czf ${{ matrix.config.asset_name }} cninja
+          tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja
         fi
-        mv ${{ matrix.config.asset_name }} $ROOT_PATH/
+        mv cninja-* "$ROOT_PATH/"
+      shell: bash
         
     - name: Deploy source tarball
       if: matrix.config.name == 'Tarball'
       run: |      
         # Deploy source archive too
         git submodule update --init --recursive
-        if [  ${{ matrix.config.name }} == 'Tarball' ]; then
+        if [ ${{ matrix.config.name }} == 'Tarball' ]; then
           find . -name .git -exec rm -rf {} \; || true
           find . -name .git -exec rm -rf {} \; || true
 
-          export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///') ; echo $VERSION
+          export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
 
           tar caf cninja-$VERSION-src.tar.gz \
             3rdparty src tests configs \
@@ -131,9 +130,10 @@ jobs:
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import -
           gpg -ab cninja-$VERSION-src.tar.gz
         fi
+      shell: bash
 
     - name: Upload
-      if: startsWith(github.ref, 'refs/tags' )
+      if: startsWith(github.ref, 'refs/tags')
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
