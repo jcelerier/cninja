@@ -101,6 +101,7 @@ jobs:
         if [ "$RUNNER_OS" == "Windows" ]; then
           cp $PWD/llvm-mingw/bin/libc++.dll build/
           cp $PWD/llvm-mingw/bin/libunwind.dll build/
+          export PATH="$PWD/llvm-mingw/bin:$PATH"
         fi
         
         build/cninja ${{ matrix.config.release_flags }} 
@@ -121,7 +122,7 @@ jobs:
         
     - name: Deploy source tarball
       if: matrix.config.name == 'Tarball'
-      run: |      
+      run: |
         # Deploy source archive too
         git submodule update --init --recursive
         if [ ${{ matrix.config.name }} == 'Tarball' ]; then
@@ -131,7 +132,7 @@ jobs:
           export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
 
           tar caf cninja-$VERSION-src.tar.gz \
-            3rdparty src tests configs \
+            3rdparty cmake src tests configs \
             CMakeLists.txt LICENSE.md README.md
           
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import -
