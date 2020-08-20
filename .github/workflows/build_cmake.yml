@@ -120,13 +120,15 @@ jobs:
         if [  ${{ matrix.config.name }} == 'Tarball' ]; then
           find . -name .git -exec rm -rf {} \; || true
           find . -name .git -exec rm -rf {} \; || true
-          
-          tar caf cninja-${{ steps.get_version.outputs.version }}-src.tar.gz \
+
+          export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///') ; echo $VERSION
+
+          tar caf cninja-$VERSION-src.tar.gz \
             3rdparty src tests configs \
             CMakeLists.txt LICENSE.md README.md
           
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import -
-          gpg -ab cninja-${{ steps.get_version.outputs.version }}-src.tar.gz
+          gpg -ab cninja-$VERSION-src.tar.gz
         fi
 
     - name: Upload
