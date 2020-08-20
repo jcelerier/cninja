@@ -59,6 +59,7 @@ jobs:
           cmake -E tar x ninja.zip
           echo "::add-path::$PWD"
           echo "::add-path::$PWD/llvm-mingw/bin"
+          echo "::add-path::$PWD/llvm-mingw/lib"
           choco install ninja
         else
           brew install ninja boost
@@ -96,6 +97,12 @@ jobs:
       run: |
         export ROOT_PATH=$PWD
 
+        # Of course Windows requires DLLs to be copied...
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          cp $PWD/llvm-mingw/bin/libc++.dll build/
+          cp $PWD/llvm-mingw/bin/libunwind.dll build/
+        fi
+        
         build/cninja ${{ matrix.config.release_flags }} 
 
         cd build-*
