@@ -5,6 +5,12 @@ A project trying to set 22th century defaults to CMake calls, with a simplified 
 
 The tool works by generating a CMake toolchain file from a list of features passed in arguments, and running a `cmake ; cmake --build` cycle with that toolchain file. Requested features can have (acyclic) dependencies and will be ordered automatically if they do.
 
+## Installing
+Either download the [latest binary for your OS](https://github.com/jcelerier/cninja/releases/latest) or install it through your package manager of choice:  
+- ArchLinux AUR: `yay -S cninja`
+- MSYS2: `pacman -S cninja`
+- Homebrew: `brew tap jcelerier/packages && brew install cninja`
+
 ## Features
 
 - Uses Ninja, Clang everywhere, and if possible libc++ and lld.
@@ -126,7 +132,7 @@ in my home directory reveals almost 30 distinct variables used in various CMake 
 
 - PGO
 - Code coverage
-- Debug split
+- ~Debug split -> done
 - Downloading Clang / CMake / Ninja automatically if they aren't available
 - Some kind of improved support for common libraries
     - Looking for Qt in `~/Qt/system/latest_version`
