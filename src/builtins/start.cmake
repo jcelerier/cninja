@@ -11,5 +11,7 @@ macro(add_linker_flags)
 endmacro()
 
 macro(set_cache)
-  set(${ARGV0} ${ARGV1} CACHE INTERNAL "")
+  if("${${ARGV0}}" STREQUAL "")
+    set(${ARGV0} ${ARGV1} CACHE INTERNAL "")
+  endif()
 endmacro()
