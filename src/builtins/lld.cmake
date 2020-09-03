@@ -20,7 +20,7 @@ endif()
 if(NOT WIN32 AND NOT APPLE)
   # Make linking faster
   # Except that gold segfaults with -flto and --threads...
-  if((CNINJA_LINKER STREQUAL "lld") OR NOT ("lto" IN_LIST CNINJA_FEATURES))
+  if((CNINJA_LINKER STREQUAL "gold") AND NOT ("lto" IN_LIST CNINJA_FEATURES))
     add_linker_flags(" -Wl,--threads")
   endif()
 
