@@ -2,8 +2,11 @@
 cninja_require(pre)
 cninja_optional(libcxx)
 cninja_optional(asan)
+
+# Following options are for building & looking for static libraries
 set_cache(BUILD_SHARED_LIBS OFF)
 set_cache(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+set_cache(CMAKE_LINK_SEARCH_END_STATIC ON)
 
 if(APPLE)
   add_linker_flags(" -static-libstdc++")
@@ -11,10 +14,15 @@ else()
   add_linker_flags(" -static-libgcc -static-libstdc++")
 endif()
 
-set_cache(CMAKE_LINK_SEARCH_END_STATIC ON)
-
 if(CNINJA_STDLIB STREQUAL "libcxx" AND NOT WIN32)
   string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -lc++abi -pthread")
+endif()
+
+if(APPLE)
+  string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -pthread")
+elseif(UNIX AND NOT WIN32)
+  # See https://stackoverflow.com/a/31265512/1495627
+  string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
 endif()
 
 # See https://stackoverflow.com/a/5259427/1495627
