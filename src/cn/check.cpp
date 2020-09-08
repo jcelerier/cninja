@@ -204,30 +204,33 @@ bool check_environment() noexcept
 
   if (sys.clangpp_binary.empty() || !check_system_command(clang_test_command))
   {
+    fmt::print(" ---------------------------------------------------------------- \n");
     if constexpr (sys.os_linux)
     {
-      fmt::print("clang not found. Please install clang 9 or later: \n");
+      fmt::print("clang toolchain not found. We recommend installing a recent clang/libc++/lld: \n");
       if (fs::exists("/usr/bin/apt"))
-        fmt::print(
-            "sudo apt update ; sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 \n");
+        fmt::print("sudo apt update ; "
+                   "sudo apt install clang-10 libc++-10-dev libc++abi-10-dev lld-10 \n");
       else if (fs::exists("/usr/bin/pacman"))
-        fmt::print("sudo apt update ; sudo apt install clang libc++ lld \n");
+        fmt::print("sudo pacman -Syu ; sudo pacman -S clang libc++ lld \n");
       else if (fs::exists("/usr/bin/yum"))
         fmt::print("sudo yum update ; sudo yum install clang libcxx-devel libcxxabi-devel lld \n");
     }
     else if constexpr (sys.os_apple)
     {
       fmt::print(
-          "clang not found. Please install either Xcode through the appstore or the command line "
+          "clang toolchain not found. Please install either Xcode through the appstore or the command line "
           "tools.\n");
     }
     else if constexpr (sys.os_windows)
     {
       fmt::print(
-          "clang not found. Please install clang and put it in your PATH: \n"
-          "https://github.com/mstorsjo/llvm-mingw/releases\n");
+          "clang toolchain not found. Please install clang/libc++/lld and put it in your PATH: \n"
+          " - either with https://github.com/mstorsjo/llvm-mingw/releases\n"
+          " - or with the official LLVM binaries\n"
+          " - or with MSYS2");
     }
-    return false;
+    fmt::print(" ---------------------------------------------------------------- \n");
   }
 
   return true;
