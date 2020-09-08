@@ -15,14 +15,14 @@ else()
 endif()
 
 if(CNINJA_STDLIB STREQUAL "libcxx" AND NOT WIN32)
-  string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -lc++abi -pthread")
+  add_linker_flags(" -lc++abi -pthread")
 endif()
 
 if(APPLE)
-  string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -pthread")
+  add_linker_flags(" -pthread")
 elseif(UNIX AND NOT WIN32)
   # See https://stackoverflow.com/a/31265512/1495627
-  string(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
+  add_linker_flags(" -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
 endif()
 
 # See https://stackoverflow.com/a/5259427/1495627
