@@ -49,25 +49,5 @@ static const struct System
       return *p;
     return ""s;
   }();
-  const std::string clangpp_binary = []() {
-    using namespace std::literals;
-    if (auto p = get_executable_path("clang++-13"))
-      return *p;
-    if (auto p = get_executable_path("clang++-12"))
-      return *p;
-    if (auto p = get_executable_path("clang++-11"))
-      return *p;
-    if (auto p = get_executable_path("clang++-10"))
-      return *p;
-    if (auto p = get_executable_path("clang++-9"))
-      return *p;
-    if (auto p = get_executable_path("clang++-8"))
-      return *p;
-    if (auto p = get_executable_path("clang++-7"))
-      return *p;
-    if (auto p = get_executable_path("clang++"))
-      return *p;
-    return ""s;
-  }();
 } sys;
 }
