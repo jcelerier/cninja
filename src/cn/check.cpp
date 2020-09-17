@@ -193,16 +193,16 @@ bool check_environment() noexcept
 
   const std::string clang_test_command =
 #if (_WIN32)
-      "echo int main(){} | " + sys.clangpp_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"
+      "echo int main(){} | " + sys.clang_binary + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o nul"
 #elif (__APPLE__)
-      "echo 'int main(){}' | " + sys.clangpp_binary + " -x c++ - -o /dev/null"
+      "echo 'int main(){}' | " + sys.clang_binary + " -x c++ - -o /dev/null"
 #else
-      "echo 'int main(){}' | " + sys.clangpp_binary
+      "echo 'int main(){}' | " + sys.clang_binary
       + " -x c++ -stdlib=libc++ -fuse-ld=lld - -o /dev/null"
 #endif
       ;
 
-  if (sys.clangpp_binary.empty() || !check_system_command(clang_test_command))
+  if (sys.clang_binary.empty() || !check_system_command(clang_test_command))
   {
     fmt::print(" ---------------------------------------------------------------- \n");
     if constexpr (sys.os_linux)
