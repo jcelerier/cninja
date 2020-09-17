@@ -31,6 +31,10 @@ static const struct System
 
   const std::string clang_binary = []() {
     using namespace std::literals;
+    if (auto p = get_executable_path("clang-13"))
+      return *p;
+    if (auto p = get_executable_path("clang-12"))
+      return *p;
     if (auto p = get_executable_path("clang-11"))
       return *p;
     if (auto p = get_executable_path("clang-10"))
@@ -47,6 +51,10 @@ static const struct System
   }();
   const std::string clangpp_binary = []() {
     using namespace std::literals;
+    if (auto p = get_executable_path("clang++-13"))
+      return *p;
+    if (auto p = get_executable_path("clang++-12"))
+      return *p;
     if (auto p = get_executable_path("clang++-11"))
       return *p;
     if (auto p = get_executable_path("clang++-10"))
