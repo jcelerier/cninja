@@ -12,12 +12,22 @@ namespace cn
 std::string generate_cmake_call(Options options)
 {
   std::string cmd;
+  cmd.reserve(1000);
   cmd += fmt::format("cmake {}", options.source_folder);
   cmd += " -GNinja -Wno-dev -DCMAKE_TOOLCHAIN_FILE=cninja-toolchain.cmake ";
 
   for (auto opt : options.cmake_options)
   {
+    const bool needs_quotes = (opt.find(' ') != std::string::npos);
+
+    if(needs_quotes)
+      cmd += "\"";
+
     cmd += opt;
+
+    if(needs_quotes)
+      cmd += "\"";
+
     cmd += ' ';
   }
 
