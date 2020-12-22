@@ -25,10 +25,10 @@ namespace cn
 namespace
 {
 // cninja_require(this)
-static inline const std::regex require_regex{R"_(cninja_require\(([a-zA-Z0-9_=-]+)\))_"};
+static inline const std::regex require_regex{R"_(cninja_require\(([a-zA-Z0-9_=.-]+)\))_"};
 
 // cninja_optional(that)
-static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_=-]+)\))_"};
+static inline const std::regex optional_regex{R"_(cninja_optional\(([a-zA-Z0-9_=.-]+)\))_"};
 
 // foo_bar = 10.14
 static inline const std::regex option_regex{R"_(([a-zA-Z0-9_-]+)\s*=\s*([a-zA-Z0-9_.-]+))_"};
