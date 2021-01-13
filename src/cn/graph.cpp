@@ -143,12 +143,16 @@ void Graph::add_requirements(const std::string& name, const std::string& content
     }
   };
 
-  for_all_matches(require_regex, [&](const std::string& str) {
+  for_all_matches(require_regex, [&](std::string str) {
     add_option(str);
+    if(auto it = str.find('='); it != str.npos)
+        str.assign(str.begin(), str.begin() + it);
     add_dependency(name, str);
   });
 
-  for_all_matches(optional_regex, [&](const std::string& str) {
+  for_all_matches(optional_regex, [&](std::string str) {
+      if(auto it = str.find('='); it != str.npos)
+          str.assign(str.begin(), str.begin() + it);
     add_dependency(name, str);
   });
 }
