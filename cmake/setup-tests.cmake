@@ -8,7 +8,8 @@ set(FLAGS
   debugmode debugsyms
   compiler=clang
   libcxx
-  plain
+  default=plain
+  post=plain
   lld
   warnings
   linkerwarnings

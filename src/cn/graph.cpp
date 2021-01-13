@@ -145,20 +145,29 @@ void Graph::add_requirements(const std::string& name, const std::string& content
 
   for_all_matches(require_regex, [&](std::string str) {
     add_option(str);
-    if(auto it = str.find('='); it != str.npos)
-        str.assign(str.begin(), str.begin() + it);
     add_dependency(name, str);
   });
 
   for_all_matches(optional_regex, [&](std::string str) {
-      if(auto it = str.find('='); it != str.npos)
-          str.assign(str.begin(), str.begin() + it);
     add_dependency(name, str);
   });
 }
 
 void Graph::add_dependency(const std::string& from, const std::string& to)
 {
+  // Handle the foo=bar case, by adding a dependency to both "foo" and "bar"
+  // e.g. cninja_optional(compiler=clang) means that we want to be after compiler,
+  // and after clang
+  if(auto it = to.find('='); it != to.npos)
+  {
+    add_dependency(from, std::string(to.begin(), to.begin() + it));
+    add_dependency(from, std::string(to.begin() + it + 1, to.end()));
+    return;
+  }
+
+  if(from == to)
+    return;
+
   node* from_node{};
   if (auto it = m_content.find(from); it != m_content.end())
   {
@@ -306,6 +315,7 @@ std::string Graph::generate()
       boost::add_edge(post_index, index, m_graph);
     }
   }
+
   using namespace boost;
   auto index_map = get(vertex_index, m_graph);
   std::size_t current_index = 0;

@@ -44,3 +44,15 @@ TEST_CASE( "dependency check order 3", "[dependency]" ) {
 
     REQUIRE(comp_pos < lld_pos);
 }
+
+TEST_CASE( "plain", "[dependency]" ) {
+    using namespace cn;
+    Options opt;
+    opt.options = {"fast", "default=plain"};
+    Graph g{opt};
+
+    std::string res;
+    REQUIRE_NOTHROW(res = g.generate());
+
+    REQUIRE(!res.empty());
+}
