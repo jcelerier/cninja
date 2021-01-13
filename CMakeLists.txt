@@ -1,33 +1,36 @@
 cmake_minimum_required(VERSION 3.13)
 project(cninja
   LANGUAGES CXX
-  VERSION 3.7.4
+  VERSION 3.7.6
   HOMEPAGE_URL "https://github.com/jcelerier/cninja"
   DESCRIPTION "Opinionated CMake config manager"
 )
 
 enable_testing()
 
+if(CMAKE_VERSION VERSION_GREATER 3.19)
+  cmake_policy(SET CMP0110 OLD)
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Dependencies
 find_package(Boost REQUIRED)
+find_package(Catch2)
 
 # Create target
-add_executable(cninja)
+add_library(cn STATIC)
 
-target_include_directories(cninja
-  PRIVATE
+target_include_directories(cn
+  PUBLIC
     3rdparty/fmt/include
     3rdparty/filesystem/include
 
     src/
 )
 
-target_sources(cninja
+target_sources(cn
   PRIVATE
-    src/main.cpp
-
     src/cn/builtins.hpp
     src/cn/check.hpp
     src/cn/config.hpp
@@ -80,15 +83,18 @@ target_sources(cninja
     src/builtins/warnings.cmake
 )
 
-target_compile_features(cninja
-  PRIVATE
+target_compile_features(cn
+  PUBLIC
     cxx_std_17
 )
 
-target_link_libraries(cninja
-  PRIVATE
+target_link_libraries(cn
+  PUBLIC
     Boost::boost
 )
+
+add_executable(cninja src/main.cpp)
+target_link_libraries(cninja PRIVATE cn)
 
 # Generate the builtins header
 include(cmake/generate-builtins.cmake)
@@ -102,70 +108,15 @@ install(
 )
 
 # Tests
-file(COPY tests DESTINATION .)
+include(cmake/setup-tests.cmake)
+if(TARGET Catch2::Catch2)
+  add_executable(graph_test tests/unit/graph.cpp)
+  target_link_libraries(graph_test PRIVATE cn Catch2::Catch2)
 
-set(FLAGS
-  fast
-  small
-  lto=full
-  lto=thin
-  debugmode debugsyms
-  compiler=clang
-  libcxx
-  plain
-  lld
-  warnings
-  linkerwarnings
-  visibility
-  static
-)
-
-# No point in testing GCC outside of Linux
-if(UNIX AND NOT APPLE)
-  list(APPEND FLAGS
-    compiler=gcc
-  )
+  include(CTest)
+  include(Catch)
+  catch_discover_tests(graph_test)
 endif()
-
-if(NOT WIN32)
-  list(APPEND FLAGS
-    asan ubsan tsan
-  )
-endif()
-foreach(kind static shared executable)
-  add_test(
-    NAME ${kind}
-    COMMAND cninja
-    WORKING_DIRECTORY tests/${kind}
-  )
-  set_tests_properties(${kind} PROPERTIES
-    FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
-  )
-
-  foreach(flag ${FLAGS})
-    add_test(
-      NAME ${kind}_${flag}
-      COMMAND cninja ${flag}
-      WORKING_DIRECTORY tests/${kind}
-    )
-    set_tests_properties(${kind}_${flag} PROPERTIES
-      FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
-    )
-
-    foreach(flag2 ${FLAGS})
-      if(NOT ${flag} STREQUAL ${flag2})
-        add_test(
-          NAME ${kind}_${flag}_${flag2}
-          COMMAND cninja ${flag} ${flag2}
-          WORKING_DIRECTORY tests/${kind}
-        )
-        set_tests_properties(${kind}_${flag}_${flag2} PROPERTIES
-          FAIL_REGULAR_EXPRESSION "[^a-z]Error;ERROR;Failed"
-        )
-      endif()
-    endforeach()
-  endforeach()
-endforeach()
 
 # Packaging
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)

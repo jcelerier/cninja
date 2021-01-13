@@ -327,7 +327,7 @@ std::string Graph::generate()
 }
 
 #if defined(CNINJA_DEBUG_GRAPH)
-void graph::debug_graph()
+void Graph::debug_graph()
 {
   std::stringstream s;
   boost::write_graphviz(
