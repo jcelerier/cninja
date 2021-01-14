@@ -40,7 +40,7 @@ jobs:
           }
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Get latest release version number
       id: get_version
       uses: battila7/get-version-action@v2
@@ -49,7 +49,7 @@ jobs:
       if: matrix.config.name != 'Tarball'
       run:  |
         git submodule update --init --recursive
-        
+
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt update
           sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 ninja-build libboost-dev
@@ -57,9 +57,9 @@ jobs:
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
           cmake -E tar x ninja.zip
-          echo "::add-path::$PWD"
-          echo "::add-path::$PWD/llvm-mingw/bin"
-          echo "::add-path::$PWD/llvm-mingw/lib"
+          echo "$PWD" >> $GITHUB_PATH
+          echo "$PWD/llvm-mingw/bin" >> $GITHUB_PATH
+          echo "$PWD/llvm-mingw/lib" >> $GITHUB_PATH
           choco install ninja
         else
           brew install ninja boost
@@ -96,18 +96,18 @@ jobs:
       if: matrix.config.name != 'Tarball'
       run: |
         export ROOT_PATH=$PWD
-        
+
         export CNINJA_FLAGS=${{ matrix.config.release_flags }}
-        
+
         # Of course Windows requires DLLs to be copied...
         if [ "$RUNNER_OS" == "Windows" ]; then
           cp $PWD/llvm-mingw/bin/libc++.dll build/
           cp $PWD/llvm-mingw/bin/libunwind.dll build/
           export PATH="$PWD/llvm-mingw/bin:$PATH"
-          
+
           export CNINJA_FLAGS="$CNINJA_FLAGS  -- -DBOOST_ROOT=$BOOST_ROOT_1_72_0"
         fi
-        
+
         build/cninja $CNINJA_FLAGS
 
         cd build-*
@@ -123,7 +123,7 @@ jobs:
         fi
         mv cninja-* "$ROOT_PATH/"
       shell: bash
-        
+
     - name: Deploy source tarball
       if: matrix.config.name == 'Tarball'
       run: |
@@ -138,7 +138,7 @@ jobs:
           tar caf cninja-$VERSION-src.tar.gz \
             3rdparty cmake src tests configs \
             CMakeLists.txt LICENSE.md README.md
-          
+
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import -
           gpg -ab cninja-$VERSION-src.tar.gz
         fi
