@@ -196,6 +196,10 @@ void Graph::add_dependency(const std::string& from, const std::string& to)
     m_content.emplace(std::move(n));
   }
 
+  if(boost::edge(m_index[from_node], m_index[to_node], m_graph).second)
+      return;
+  if(boost::edge(m_index[to_node], m_index[from_node], m_graph).second)
+      return;
   boost::add_edge(m_index[from_node], m_index[to_node], m_graph);
 }
 
@@ -299,8 +303,12 @@ std::string Graph::generate()
     }
   }
 
+  auto pre_index = m_index[m_preStage];
   auto default_index = m_index[m_defaultStage];
   auto post_index = m_index[m_postStage];
+
+  boost::add_edge(default_index, pre_index, m_graph);
+  boost::add_edge(post_index, default_index, m_graph);
   for (const auto& [node, index] : m_index)
   {
     if (node->name == "start")
@@ -311,8 +319,10 @@ std::string Graph::generate()
     auto [out_begin, out_end] = boost::out_edges(index, m_graph);
     if (in_begin == in_end && out_begin == out_end)
     {
-      boost::add_edge(index, default_index, m_graph);
-      boost::add_edge(post_index, index, m_graph);
+      if(index != default_index)
+        boost::add_edge(index, default_index, m_graph);
+      if(post_index != index)
+        boost::add_edge(post_index, index, m_graph);
     }
   }
 
