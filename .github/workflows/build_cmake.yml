@@ -60,7 +60,7 @@ jobs:
           echo "$PWD" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/bin" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/lib" >> $GITHUB_PATH
-          choco install ninja 7z
+          choco install ninja 7zip
 
           export BOOST_SDK=https://github.com/ossia/score-sdk/releases/download/sdk23
           export BOOST_VER=boost_1_78_0
