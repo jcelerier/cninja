@@ -87,9 +87,9 @@ jobs:
     - name: Test
       if: matrix.config.name != 'Tarball'
       run: |
-        if [ "$RUNNER_OS" != "Windows" ]; then
-          cd build && ctest -V
-        fi
+        cd build
+        ctest -V || true
+
       shell: bash
 
     - name: Deploy binaries
