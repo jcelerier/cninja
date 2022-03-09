@@ -1,6 +1,7 @@
 cninja_require(pre)
 cninja_require(compiler=clang)
 cninja_require(lld)
+cninja_require(gdbindex)
 # cninja_require(libcxx) - not useful as of now as linux distros default to libstdc++
 cninja_require(visibility)
 cninja_require(linker)
@@ -29,7 +30,7 @@ set_cache(CMAKE_POSITION_INDEPENDENT_CODE 1)
 set_cache(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # We are in 2020
-set_cache(CMAKE_CXX_STANDARD 17)
+set_cache(CMAKE_CXX_STANDARD 20)
 
 # If you CI run looks like
 # $ cmake --build .

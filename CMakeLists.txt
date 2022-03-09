@@ -63,10 +63,12 @@ target_sources(cn
     src/builtins/fast.cmake
     src/builtins/finish.cmake
     src/builtins/gcc.cmake
+    src/builtins/gdbindex.cmake
     src/builtins/libcxx.cmake
     src/builtins/linker.cmake
     src/builtins/linkerwarnings.cmake
     src/builtins/lld.cmake
+    src/builtins/mold.cmake
     src/builtins/lto.cmake
     src/builtins/no-examples.cmake
     src/builtins/no-tests.cmake

@@ -23,8 +23,4 @@ if(NOT WIN32 AND NOT APPLE)
   if((CNINJA_LINKER STREQUAL "gold") AND NOT ("lto" IN_LIST CNINJA_FEATURES) AND NOT (CNINJA_COMPILER STREQUAL "gcc"))
     add_linker_flags(" -Wl,--threads")
   endif()
-
-  # Make debugging faster
-  # Pro tip (Thanks Milian !): also add "set index-cache on" to your .gdbinit
-  add_linker_flags(" -Wl,--gdb-index")
 endif()
