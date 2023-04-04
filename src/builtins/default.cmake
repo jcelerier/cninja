@@ -5,7 +5,7 @@ cninja_require(gdbindex)
 # cninja_require(libcxx) - not useful as of now as linux distros default to libstdc++
 cninja_require(visibility)
 cninja_require(linker)
-cninja_require(linkerwarnings)
+cninja_require(linker-warnings)
 
 # -pipe: Potentially makes the build faster
 string(APPEND CMAKE_C_FLAGS_INIT " -pipe")

@@ -13,6 +13,7 @@
 #include <boost/graph/graphviz.hpp>
 #endif
 
+#include <array>
 #include <functional>
 #include <iostream>
 #include <regex>

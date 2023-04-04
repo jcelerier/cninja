@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(cninja
   LANGUAGES CXX
-  VERSION 3.7.8
+  VERSION 3.7.9
   HOMEPAGE_URL "https://github.com/jcelerier/cninja"
   DESCRIPTION "Opinionated CMake config manager"
 )
@@ -66,7 +66,8 @@ target_sources(cn
     src/builtins/gdbindex.cmake
     src/builtins/libcxx.cmake
     src/builtins/linker.cmake
-    src/builtins/linkerwarnings.cmake
+    src/builtins/linker-optimizations.cmake
+    src/builtins/linker-warnings.cmake
     src/builtins/lld.cmake
     src/builtins/mold.cmake
     src/builtins/lto.cmake
@@ -87,7 +88,7 @@ target_sources(cn
 
 target_compile_features(cn
   PUBLIC
-    cxx_std_17
+    cxx_std_23
 )
 
 target_link_libraries(cn
@@ -113,7 +114,7 @@ install(
 include(cmake/setup-tests.cmake)
 if(TARGET Catch2::Catch2)
   add_executable(graph_test tests/unit/graph.cpp)
-  target_link_libraries(graph_test PRIVATE cn Catch2::Catch2)
+  target_link_libraries(graph_test PRIVATE cn Catch2::Catch2WithMain)
 
   include(CTest)
   include(Catch)
