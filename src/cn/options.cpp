@@ -46,9 +46,10 @@ const actions_map create_actions_map()
 {
   actions_map map;
 
-  auto help_action = [] (const Options&) {
-      fmt::print(
-          R"_(cninja - an opinionated cmake frontend
+  auto help_action = [](const Options&)
+  {
+    fmt::print(
+        R"_(cninja - an opinionated cmake frontend
 Usage:
 Invoke cninja with the default options:
 $ cninja
@@ -60,7 +61,7 @@ Invoke cninja with custom options:
 $ cninja [OPTIONS...]
 
 Invoke cninja with custom options outside of source tree:
-$ cninja ../some/source/folder [OPTIONS...]
+$ cninja -S ../some/source/folder -B some/build/folder [OPTIONS...]
 
 Invoke cninja with custom options, and pass some flags to CMake:
 $ cninja [OPTIONS...] -- [CMake flags...]
@@ -70,7 +71,8 @@ somewhere in your directory tree relative to this folder.
 
 Built-in options:
 {}
-)_", options_text());
+)_",
+        options_text());
   };
 
   map["-h"] = help_action;
@@ -129,9 +131,17 @@ Options parse_options(int argc, char** argv)
 {
   Options options{};
   std::optional<std::string_view> source_folder;
+  std::optional<std::string_view> build_folder;
 
   // Parse the options - anything after -- goes to cmake.
-  bool cmake{};
+  enum ParseState
+  {
+    SourceFolder,
+    BuildFolder,
+    CNinjaOptions,
+    CMakeOptions
+  } parse_state{};
+
   for (int it = 1; it < argc; ++it)
   {
     // If one of the argument is a folder, it is considered as the source folder.
@@ -144,14 +154,37 @@ Options parse_options(int argc, char** argv)
 
     if (arg == "--")
     {
-      cmake = true;
+      parse_state = CMakeOptions;
+      continue;
+    }
+    else if (arg == "-S")
+    {
+      parse_state = SourceFolder;
+      continue;
+    }
+    else if (arg == "-B")
+    {
+      parse_state = BuildFolder;
       continue;
     }
 
-    if (!cmake)
-      options.options.push_back(arg);
-    else
-      options.cmake_options.push_back(arg);
+    switch (parse_state)
+    {
+      case SourceFolder:
+        source_folder = arg;
+        parse_state = CNinjaOptions;
+        break;
+      case BuildFolder:
+        build_folder = arg;
+        parse_state = CNinjaOptions;
+        break;
+      case CNinjaOptions:
+        options.options.push_back(arg);
+        break;
+      case CMakeOptions:
+        options.cmake_options.push_back(arg);
+        break;
+    }
   }
 
   // No source folder -> we use the working directory.
@@ -159,6 +192,9 @@ Options parse_options(int argc, char** argv)
     options.source_folder = fs::absolute(std::string(*source_folder));
   else
     options.source_folder = fs::absolute(".");
+
+  if (build_folder)
+    options.build_folder = fs::absolute(std::string(*build_folder));
 
   // Check if we have something like help, etc.
   parse_special_options(options);
