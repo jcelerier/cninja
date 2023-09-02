@@ -3,7 +3,8 @@ cninja_require(pre)
 cninja_require(lto=full)
 cninja_optional(debugsyms)
 cninja_optional(compiler)
-cninja_optional(lld)
+cninja_optional(linker=lld)
+cninja_optional(linker=mold)
 
 # Identical code folding reduces size and improves performance
 if(CNINJA_LINKER STREQUAL "lld")

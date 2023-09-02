@@ -1,6 +1,6 @@
 cninja_require(pre)
 cninja_require(compiler=clang)
-cninja_require(lld)
+cninja_require(linker=lld)
 cninja_require(gdbindex)
 # cninja_require(libcxx) - not useful as of now as linux distros default to libstdc++
 cninja_require(visibility)

@@ -3,7 +3,8 @@ cninja_require(pre)
 cninja_require(lto=full)
 cninja_optional(debugsyms)
 cninja_optional(compiler)
-cninja_optional(lld)
+cninja_optional(linker=lld)
+cninja_optional(linker=mold)
 
 # Not put in the _INIT as it isoverriden by the GNU Cmake module
 string(APPEND CMAKE_C_FLAGS " -Ofast -march=native")

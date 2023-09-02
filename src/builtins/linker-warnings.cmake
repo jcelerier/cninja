@@ -4,6 +4,7 @@
 
 cninja_require(pre)
 cninja_optional(lld)
+cninja_optional(mold)
 
 if(NOT "asan" IN_LIST CNINJA_FEATURES)
   if(NOT "ubsan" IN_LIST CNINJA_FEATURES)
