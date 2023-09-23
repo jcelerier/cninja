@@ -72,8 +72,8 @@ jobs:
           BOOST="$BOOST_VER.tar.gz"
           curl -L -0 "$BOOST_SDK/$BOOST" --output "$BOOST"
           mkdir -p "boost/include"
-          cmake -E tar x "$BOOST"
-          mv boost_*/boost "boost/include/"
+          cmake -E tar xzf "$BOOST"
+          mv $BOOST_VER boost
         )
       shell: bash
 
@@ -83,12 +83,11 @@ jobs:
         CXXFLAGS: ${{ matrix.config.cxxflags }}
         CXX: ${{ matrix.config.cxx }}
       run: |
-        mkdir build && cd build
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake -GNinja -DBOOST_ROOT="$PWD/boost" ..
-        else
-          cmake ..
-        fi
+        cmake \
+          -S $PWD \
+          -B build \
+          -GNinja \
+          -DBOOST_ROOT="$PWD/boost"
       shell: bash
 
     - name: Build
@@ -115,11 +114,9 @@ jobs:
           cp $PWD/llvm-mingw/bin/libc++.dll build/
           cp $PWD/llvm-mingw/bin/libunwind.dll build/
           export PATH="$PWD/llvm-mingw/bin:$PATH"
-
-          export CNINJA_FLAGS="$CNINJA_FLAGS  -- -DBOOST_ROOT=$PWD/boost"
         fi
 
-        build/cninja $CNINJA_FLAGS
+        build/cninja $CNINJA_FLAGS -- -DBOOST_ROOT=$PWD/boost
 
         cd build-*
         cmake --build . --target install
