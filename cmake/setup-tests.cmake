@@ -12,7 +12,7 @@ set(FLAGS
   post=plain
   lld
   warnings
-  linkerwarnings
+  linker-warnings
   visibility
   static
 )
