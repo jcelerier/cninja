@@ -58,6 +58,7 @@ jobs:
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
           cmake -E tar x ninja.zip
+          cp ninja.exe "$PWD/llvm-mingw/bin/"
           echo "$PWD" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/bin" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/lib" >> $GITHUB_PATH
@@ -87,7 +88,8 @@ jobs:
           -S $PWD \
           -B build \
           -GNinja \
-          -DBOOST_ROOT="$PWD/boost"
+          -DBOOST_ROOT="$PWD/boost" \
+          -DBoost_INCLUDE_DIR="$PWD/boost"
       shell: bash
 
     - name: Build
@@ -116,16 +118,22 @@ jobs:
           export PATH="$PWD/llvm-mingw/bin:$PATH"
         fi
 
-        build/cninja $CNINJA_FLAGS -- -DBOOST_ROOT=$PWD/boost
+        build/cninja \
+          -S $PWD \
+          -B build-final \
+          $CNINJA_FLAGS \
+          -- \
+          -DBOOST_ROOT="$PWD/boost" \
+          -DBoost_INCLUDE_DIR="$PWD/boost"
 
-        cd build-*
-        cmake --build . --target install
-        cd install/bin
+        cmake --build build-final --target install
+
+        cd build-final/install/bin
 
         export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
 
         if [ "$RUNNER_OS" == "Windows" ]; then
-          tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja.exe
+          cmake -E tar cf "cninja-$VERSION-$RUNNER_OS.zip" --format=zip cninja.exe
         else
           tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja
         fi
