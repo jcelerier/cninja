@@ -57,11 +57,9 @@ jobs:
         elif [ "$RUNNER_OS" == "Windows" ]; then
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
+          mv llvm-mingw-* llvm-mingw
+
           cmake -E tar x ninja.zip
-          echo " ===== ?? "
-          ls
-          echo " ===== !! "
-          find . -name clang.exe
           cp ninja.exe "$PWD/llvm-mingw/bin/"
           echo "$PWD" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/bin" >> $GITHUB_PATH
@@ -78,16 +76,7 @@ jobs:
           curl -L -0 "$BOOST_SDK/$BOOST" --output "$BOOST"
 
           cmake -E tar xzf "$BOOST"
-          echo " ============ 1 "
-          ls
-          echo " ============ 2 "
-          ls $BOOST_VER
           mv $BOOST_VER boost
-          echo " ============ 3 "
-          ls
-          echo " ============ 4 "
-          find . -name 'version.hpp'
-          pwd
         )
       shell: bash
 
