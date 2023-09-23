@@ -86,8 +86,7 @@ jobs:
         CXXFLAGS: ${{ matrix.config.cxxflags }}
         CXX: ${{ matrix.config.cxx }}
       run: |
-        find . -name 'version.hpp'
-        pwd
+        export PATH="$PWD/llvm-mingw/bin:$PATH"
         cmake \
           -S $PWD \
           -B build \
