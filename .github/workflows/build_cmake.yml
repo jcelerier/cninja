@@ -15,28 +15,28 @@ jobs:
             os: windows-latest,
             cxx: "../llvm-mingw/bin/clang++.exe",
             cxxflags: "",
-            release_flags: "era=win7 static lto=full small"
+            release_flags: "era=win10 static lto=full small"
           }
         - {
             name: "Ubuntu",
             os: ubuntu-latest,
-            cxx: "clang++-9",
+            cxx: "clang++-15",
             cxxflags: "-stdlib=libc++",
             release_flags: "static lto=full small"
           }
         - {
             name: 'Tarball',
             os: ubuntu-latest,
-            cxx: "clang++-9",
+            cxx: "clang++-15",
             cxxflags: "-stdlib=libc++",
             release_flags: "static lto=full small"
           }
         - {
             name: "macOS",
-            os: macos-latest,
+            os: macos-13,
             cxx: "clang++",
             cxxflags: "",
-            release_flags: "era=10.11 static lto=full small"
+            release_flags: "era=11.0 static lto=full small"
           }
     steps:
     - uses: actions/checkout@v2
@@ -50,9 +50,10 @@ jobs:
       run:  |
         git submodule update --init --recursive
 
+        # Install toolchain
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt update
-          sudo apt install clang-9 libc++-9-dev libc++abi-9-dev lld-9 ninja-build libboost-dev
+          sudo apt install clang-15 libc++-15-dev libc++abi-15-dev lld-15 ninja-build
         elif [ "$RUNNER_OS" == "Windows" ]; then
           cmake -P 'cmake/download-llvm.cmake'
           cmake -E tar x llvm.zip
@@ -60,21 +61,20 @@ jobs:
           echo "$PWD" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/bin" >> $GITHUB_PATH
           echo "$PWD/llvm-mingw/lib" >> $GITHUB_PATH
-          choco install ninja 7zip
-
-          export BOOST_SDK=https://github.com/ossia/score-sdk/releases/download/sdk23
-          export BOOST_VER=boost_1_78_0
-          (
-            BOOST="$BOOST_VER.zip"
-            curl -L -0 "$BOOST_SDK/$BOOST" --output "$BOOST"
-            mkdir -p "boost/include"
-            7z x "$BOOST"
-            mv boost_*/boost "boost/include/"
-          )
-
         else
-          brew install ninja boost
+          brew install ninja
         fi
+
+        # Install boost
+        export BOOST_SDK=https://github.com/ossia/score-sdk/releases/download/sdk28
+        export BOOST_VER=boost_1_83_0
+        (
+          BOOST="$BOOST_VER.tar.gz"
+          curl -L -0 "$BOOST_SDK/$BOOST" --output "$BOOST"
+          mkdir -p "boost/include"
+          cmake -E tar x "$BOOST"
+          mv boost_*/boost "boost/include/"
+        )
       shell: bash
 
     - name: Configure
@@ -128,7 +128,7 @@ jobs:
         export VERSION=$(echo ${{ steps.get_version.outputs.version }} | sed 's/refs\/heads\///')
 
         if [ "$RUNNER_OS" == "Windows" ]; then
-          "/c/Program Files/7-Zip/7z.exe" a "cninja-$VERSION-$RUNNER_OS.zip" cninja.exe
+          tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja.exe
         else
           tar -czf "cninja-$VERSION-$RUNNER_OS.tar.gz" cninja
         fi
