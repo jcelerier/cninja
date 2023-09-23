@@ -13,7 +13,7 @@ jobs:
         - {
             name: "Windows",
             os: windows-latest,
-            cxx: "../llvm-mingw/bin/clang++.exe",
+            cxx: "clang++.exe",
             cxxflags: "",
             release_flags: "era=win10 static lto=full small"
           }
