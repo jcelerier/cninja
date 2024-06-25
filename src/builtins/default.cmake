@@ -32,6 +32,9 @@ set_cache(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # We are in 2020
 set_cache(CMAKE_CXX_STANDARD 20)
 
+# Useful for avoiding rebuilds with IDEs which set this like QtCreator
+set_cache(CMAKE_COLOR_DIAGNOSTICS 1)
+
 # If you CI run looks like
 # $ cmake --build .
 # $ cmake --build . --target install
